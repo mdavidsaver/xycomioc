@@ -1,0 +1,4 @@
+device(bi,VME_IO,devBiXVme210,"XVME-210")
+device(mbbi,VME_IO,devMbbiXVme210,"XVME-210")
+device(mbbiDirect,VME_IO,devMbbiDirectXVme210,"XVME-210")
+driver(drvXy210)
