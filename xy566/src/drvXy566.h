@@ -10,6 +10,8 @@
 
 #define XY566WF         0       /* & Xycom 566 as a waveform */
 
+typedef void(*pcb_fn)(void*,int,volatile unsigned char*);
+
 int ai_xy566_getioscanpvt(unsigned short card, IOSCANPVT *scanpvt);
 int ai_xy566_driver(
     short	   card,
@@ -19,6 +21,6 @@ int ai_xy566_driver(
 );
 int xy566_driver(
     unsigned short slot,
-    unsigned int   *pcbroutine,
-    unsigned int   *parg  /* number of values read */
+    pcb_fn         pcbroutine,
+    void           *parg
 );

@@ -25,21 +25,20 @@
  *      ...
  */
 
-#include <vxWorks.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
-#include "alarm.h"
-#include "cvtTable.h"
-#include "dbDefs.h"
-#include "dbAccess.h"
-#include "recGbl.h"
-#include "recSup.h"
-#include "devSup.h"
-#include "link.h"
-#include "dbScan.h"
-#include "aiRecord.h"
+#include <alarm.h>
+#include <cvtTable.h>
+#include <dbDefs.h>
+#include <dbAccess.h>
+#include <recGbl.h>
+#include <recSup.h>
+#include <devSup.h>
+#include <link.h>
+#include <dbScan.h>
+#include <aiRecord.h>
 #include <epicsExport.h>
 
 #include "drvXy566.h"

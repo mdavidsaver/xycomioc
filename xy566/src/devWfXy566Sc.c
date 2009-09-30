@@ -25,19 +25,18 @@
  */
 
 
-#include <vxWorks.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
-#include "alarm.h"
-#include "dbDefs.h"
-#include "dbAccess.h"
-#include "recGbl.h"
-#include "recSup.h"
-#include "devSup.h"
-#include "link.h"
-#include "waveformRecord.h"
+#include <alarm.h>
+#include <dbDefs.h>
+#include <dbAccess.h>
+#include <recGbl.h>
+#include <recSup.h>
+#include <devSup.h>
+#include <link.h>
+#include <waveformRecord.h>
 #include <epicsExport.h>
 
 #include "drvXy566.h"
@@ -68,7 +67,7 @@ epicsExportAddress(dset,devWfXy566Sc);
 static void myCallback(pwf,no_read,pdata)
     struct waveformRecord   *pwf;
     int             no_read;
-    unsigned char   *pdata;
+    volatile unsigned char   *pdata;
 {
 	struct rset     *prset=(struct rset *)(pwf->rset);
 	short ftvl = pwf->ftvl;

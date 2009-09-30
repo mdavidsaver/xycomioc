@@ -67,23 +67,16 @@
  * .24  08-04-93	mgb	Removed V5/V4 and EPICS_V2 conditionals
  */
 
-#include <vxWorks.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <rebootLib.h>
-#include <intLib.h>
-#include <iv.h>
-#include <vme.h>
-#include <sysLib.h>
-#include <logLib.h>
-#include <vxLib.h>
 
-#include "dbDefs.h"
-#include "dbScan.h"
-#include "drvSup.h"
-#include "task_params.h"
-#include "taskwd.h"
+#include <dbDefs.h>
+#include <dbScan.h>
+#include <drvSup.h>
+#include <taskwd.h>
 #include <epicsExport.h>
+#include <epicsThread.h>
+#include <devLib.h>
 
 #include "drvXy566.h"
 
@@ -202,12 +195,12 @@ struct wf085 {                          /* struct XVME 566 */
 };
 
 /* arrays which keep track of which cards are found at initialization */
-struct ai566	**pai_xy566se;
-struct ai566	**pai_xy566di;
-struct ai566	**pai_xy566dil; 
-unsigned short	**pai_xy566se_mem;
-unsigned short	**pai_xy566di_mem;
-unsigned short	**pai_xy566dil_mem;
+volatile struct ai566	**pai_xy566se;
+volatile struct ai566	**pai_xy566di;
+volatile struct ai566	**pai_xy566dil; 
+volatile unsigned short	**pai_xy566se_mem;
+volatile unsigned short	**pai_xy566di_mem;
+volatile unsigned short	**pai_xy566dil_mem;
 static IOSCANPVT *paioscanpvt;
 
 
@@ -249,22 +242,22 @@ static IOSCANPVT *paioscanpvt;
 /* xycom 085 encoder pulse mechanism */
 #define XY_ARM  	0x10    /* arm the encoder pulse circuitry */
 #define XY_BUSY 	0x20    /* indicates the waveform is still being taken */
-#define XY_LED          0x3     /* set the Xycom status LEDs to OK */
+#define XY_LED          0x3     /* set the Xycom status LEDs to 0 */
 #define XY_SOFTRESET    0x10    /* reset the IO card */
 
 
 /* arrays which keep track of which cards are found at initialization */
-struct ai566	**pwf_xy566;
-struct wf085	**pwf_xy085;
-char		**pwf_mem;
+volatile struct ai566	**pwf_xy566;
+volatile struct wf085	**pwf_xy085;
+volatile unsigned char	**pwf_mem;
 
 /* the routine to call when the data is read and the argument to send */
-unsigned int	**pargument;
-unsigned int	**proutine;
+void		**pargument;
+pcb_fn   	 *proutine;
 
 /* VME memory Short Address Space is set up in gta_init */
 
-int		wfDoneId;	/* waveform done task ID */
+epicsThreadId	wfDoneId;	/* waveform done task ID */
 
 
 /*      The following two subroutines introduce a delay between
@@ -272,20 +265,24 @@ int		wfDoneId;	/* waveform done task ID */
  *      parts of the card (i.e. the AM9513). It also insures
  *      that a value is actually written, instead of compiler
  *      generated bset or bclr instructions.
+ *
+ *	MAD 29 Sept 2009 - mark pointers as volatile, so these
+ *	                   functions are unnecessary.
  */
-static void senw (unsigned short *addr, unsigned short val)
+static void senw (volatile unsigned short *addr, unsigned short val)
 {
         *addr = val;
 }
  
-static void senb (unsigned char *addr, unsigned char val)
+static void senb (volatile unsigned char *addr, unsigned char val)
 {
         *addr = val;
 }
 
-static void ai566_intr(int i)
+static void ai566_intr(void* pi)
 {
-	struct ai566 *ap;
+	int i=(int)pi;
+	volatile struct ai566 *ap;
 
 	ap = pai_xy566dil[i];
 
@@ -302,60 +299,60 @@ static void ai566_intr(int i)
  * intialize the xycom 566 analog input card
  */
 static long ai_xy566_init(
-    struct ai566	***pppcards_present,
-    unsigned int	base_addr,
+    volatile struct ai566	***pppcards_present,
+    size_t		base_addr,
     short		num_channels,
     short		num_cards,
-    unsigned int	paimem,
-    short		***pppmem_present
+    size_t		paimem,
+    volatile short		***pppmem_present
 ) {
 	short		shval;
 	short	i,n;
-	struct ai566	*pai566;	/* memory location of cards */
+	volatile struct ai566	*pai566;	/* memory location of cards */
         char		*pai566io;	/* mem loc of I/O buffer */
         short status;
-	struct ai566	**ppcards_present;
-	short		**ppmem_present;
+	volatile struct ai566	**ppcards_present;
+	volatile short	**ppmem_present;
 
-    *pppcards_present = (struct ai566 **)
+    *pppcards_present = (volatile struct ai566 **)
 	calloc(num_cards, sizeof(**pppcards_present));
     if(!*pppcards_present){
-	return ERROR;
+	return 1;
     }
 
-    *pppmem_present = (short **)
+    *pppmem_present = (volatile short **)
 	calloc(num_cards, sizeof(**pppmem_present));
     if(!*pppmem_present){
-	return ERROR;
+	return 1;
     }
 
     ppcards_present = *pppcards_present;
     ppmem_present = *pppmem_present;
 
     /* map the io card into the short address space */
-    status = sysBusToLocalAdrs(VME_AM_SUP_SHORT_IO, (char *)base_addr, (char **)&pai566);
-    if(status != OK){
-    	logMsg("%s: failed to map XY566 A16 base addr A16=%x\n", 
-		(int) __FILE__, base_addr, 0,0,0,0);
-   	return ERROR;
+    status = devBusToLocalAddr(atVMEA16, base_addr, (volatile void**)&pai566);
+    if(status != 0){
+    	errlogPrintf("%s: failed to map XY566 A16 base addr A16=%x\n", 
+		__FILE__, base_addr);
+   	return 1;
     }
 
     /* map the io card into the standard address space */
-    status = sysBusToLocalAdrs(VME_AM_STD_SUP_DATA,(char *)paimem, (char **)&pai566io);
-    if(status != OK){
-    	logMsg( "%s: failed to map XY566 A24 base addr A24=%x\n",
-		(int) __FILE__, paimem, 0,0,0,0);
-   	return ERROR;
+    status = devBusToLocalAddr(atVMEA24, paimem, (volatile void**)&pai566io);
+    if(status != 0){
+    	errlogPrintf( "%s: failed to map XY566 A24 base addr A24=%x\n",
+		__FILE__, paimem);
+   	return 1;
     }
 
     /* mark each card present into the card present array */
     for (i = 0; i < num_cards;
       i++, pai566++, ppcards_present++, pai566io+=XY566_MEM_INCR,ppmem_present++) {
-	if (vxMemProbe((char *)pai566,READ,sizeof(short),(char *)&shval) != OK){
+	if (devReadProbe(sizeof(short), pai566, &shval) !=0){
 		*ppcards_present = 0;
 		continue;
 	}
-	if (vxMemProbe((char *)pai566io,READ,sizeof(short),(char *)&shval) != OK){
+	if (devReadProbe(sizeof(short), pai566io, &shval) !=0){
 		*ppcards_present = 0;
 		continue;
 	}
@@ -429,7 +426,7 @@ static long ai_xy566_init(
 	senb(&pai566->soft_start,0);
     } 
 
-    return OK;
+    return 0;
 } 
 
 /*
@@ -438,30 +435,30 @@ static long ai_xy566_init(
  * intialize the xycom 566 latched analog input card
  */
 static long ai_xy566l_init(
-    struct ai566	***pppcards_present,
+    volatile struct ai566	***pppcards_present,
     unsigned int	base_addr,
     short		num_channels,
     short		num_cards,
     unsigned int	paimem,
-    short		***pppmem_present
+    volatile short	***pppmem_present
 ) {
     short			shval;
-    register short		i,n;
-    struct ai566	*pai566;	/* memory location of cards */
+    short			i,n;
+    volatile struct ai566	*pai566;	/* memory location of cards */
     char		*pai566io;	/* mem loc of I/O buffer */
     int status;
-    struct ai566	**ppcards_present;
-    short		**ppmem_present;
+    volatile struct ai566	**ppcards_present;
+    volatile short		**ppmem_present;
 
-    *pppcards_present = (struct ai566 **)
+    *pppcards_present = (volatile struct ai566 **)
 	calloc(num_cards, sizeof(**pppcards_present));
     if(!*pppcards_present){
-	return ERROR;
+	return 1;
     }
 
     paioscanpvt = (IOSCANPVT *)calloc(num_cards, sizeof(*paioscanpvt));
     if(!paioscanpvt) {
-        return ERROR;
+        return 1;
     }
     {
         int i;
@@ -471,39 +468,43 @@ static long ai_xy566l_init(
         }
     }
 
-    *pppmem_present = (short **)
+    *pppmem_present = (volatile short **)
 	calloc(num_cards, sizeof(**pppmem_present));
     if(!*pppmem_present){
-	return ERROR;
+	return 1;
     }
 
     ppcards_present = *pppcards_present;
     ppmem_present = *pppmem_present;
 
     /* map the io card into the short address space */
-    if ((status = sysBusToLocalAdrs(VME_AM_SUP_SHORT_IO,(char *)base_addr, (char **)&pai566)) != OK){
-    	logMsg(	"%s: failed to map XY566 (latched) A16 base addr A16=%x\n", 
-		(int) __FILE__, base_addr, 0,0,0,0);
-   	return ERROR;
+    status = devBusToLocalAddr(atVMEA16, base_addr, (volatile void**)&pai566);
+    if (status != 0){
+    	errlogPrintf(	"%s: failed to map XY566 (latched) A16 base addr A16=%x\n", 
+		__FILE__, base_addr);
+   	return 1;
     }
 
     /* map the io card into the standard address space */
-    if((status = sysBusToLocalAdrs(VME_AM_STD_SUP_DATA,(char *)paimem, (char **)&pai566io)) != OK){
-    	logMsg(	"%s: failed to map XY566 (latched) A24 base addr A24=%x\n",
-		(int) __FILE__, paimem, 0,0,0,0);
-   	return ERROR;
+    status = devBusToLocalAddr(atVMEA24, paimem, (volatile void**)&pai566io);
+    if(status != 0){
+    	errlogPrintf(	"%s: failed to map XY566 (latched) A24 base addr A24=%x\n",
+		__FILE__, paimem);
+   	return 1;
     }
 
-    rebootHookAdd(xy566_reset); 
+#ifdef VXWORKS
+    rebootHookAdd(xy566_reset);
+#endif
 
     /* mark each card present into the card present array */
     for (i=0;i<num_cards;
       i++, pai566++, ppcards_present++, pai566io+=XY566_MEM_INCR,ppmem_present++){
-	if (vxMemProbe((char *)pai566,READ,sizeof(short),(char *)&shval) != OK){
+	if (devReadProbe(sizeof(short), pai566, &shval) !=0){
 		*ppcards_present = 0;
 		continue;
 	}
-	if (vxMemProbe((char *)pai566io,READ,sizeof(short),(char *)&shval) != OK){
+	if (devReadProbe(sizeof(short), pai566io, &shval) !=0){
 		*ppcards_present = 0;
 		continue;
 	}
@@ -518,8 +519,8 @@ static long ai_xy566l_init(
 	/* taken from the XYCOM-566 Manual. Figure 4-6  Page 4-19 */
 	pai566->int_vect = AI566_VNUM + i;
   
-	intConnect(INUM_TO_IVEC(AI566_VNUM + i), ai566_intr, i);
-        sysIntEnable(XY566_INT_LEVEL); 
+	devConnectInterruptVME(AI566_VNUM + i, &ai566_intr, (void*)(long)i);
+	devEnableInterruptLevelVME(XY566_INT_LEVEL);
 
 	/* reset the Xycom 566 board */
 	senw(&pai566->a566_csr,0x00);		/* off seq control */
@@ -588,7 +589,7 @@ static long ai_xy566l_init(
 
     }
 
-    return OK;
+    return 0;
 }
 
 
@@ -602,16 +603,16 @@ static long ai_566_init(void)
 {
 	/* intialize the Xycom 566 Unipolar Single Ended Analog Inputs */
 	ai_xy566_init(&pai_xy566se,ai_addrs[XY566SE],ai_num_channels[XY566SE],
-        	ai_num_cards[XY566SE],ai_memaddrs[XY566SE],(short ***)&pai_xy566se_mem); 
+        	ai_num_cards[XY566SE],ai_memaddrs[XY566SE],(volatile short ***)&pai_xy566se_mem); 
 
 	/* intialize the Xycom 566 Unipolar Differential Analog Inputs */
 	ai_xy566_init(&pai_xy566di,ai_addrs[XY566DI],ai_num_channels[XY566DI],
-		ai_num_cards[XY566DI],ai_memaddrs[XY566DI],(short ***)&pai_xy566di_mem); 
+		ai_num_cards[XY566DI],ai_memaddrs[XY566DI],(volatile short ***)&pai_xy566di_mem); 
 
 
 	/* intialize the Xycom 566 Unipolar Differential Analog Inputs Latched */
         ai_xy566l_init(&pai_xy566dil,ai_addrs[XY566DIL],ai_num_channels[XY566DIL],
-		ai_num_cards[XY566DIL],ai_memaddrs[XY566DIL],(short ***)&pai_xy566dil_mem); 
+		ai_num_cards[XY566DIL],ai_memaddrs[XY566DIL],(volatile short ***)&pai_xy566dil_mem); 
 
 	return (0);
 }
@@ -711,17 +712,14 @@ static int xy566_reset(int startType){
 	struct ai566	*pai566;	/* memory location of cards */
 	int status;
 
-	status = sysBusToLocalAdrs(
-			VME_AM_SUP_SHORT_IO,
-			(char *)(long)ai_addrs[XY566DIL], 
-			(char **)&pai566);
-	if (status != OK){
-		logMsg("%s: unable to map A16 XY566 base\n", (int)__FILE__, 0,0,0,0,0);
+	status = devBusToLocalAddr(atVMEA16, ai_addrs[XY566DIL], (volatile void**)&pai566);
+	if (status != 0){
+		errlogPrintf("%s: unable to map A16 XY566 base\n", __FILE__);
 		return 0;
 	}
 
 	for (i=0;i<ai_num_cards[XY566DIL]; i++, pai566++ ){
-		if (vxMemProbe((char *)pai566,READ,sizeof(short),(char *)&shval) != OK){
+		if (devReadProbe(sizeof(short), pai566, &shval) !=0){
 			continue;
 		}
 		csr_val =(unsigned short )XY566L_CSR;
@@ -771,7 +769,7 @@ static long ai_xy566_io_report(int level)
             } 
         }
     }
-    return OK;
+    return 0;
 }
 
 /*
@@ -832,11 +830,11 @@ static void xy566_rval_report(short card, short type)
  */
 int xy566_driver(
     unsigned short slot,
-    unsigned int   *pcbroutine,
-    unsigned int   *parg  /* number of values read */
+    pcb_fn         pcbroutine,
+    void   *parg  /* number of values read */
 ) {
-	register struct ai566 *pwf566;
-	register struct wf085 *pwf085;
+	volatile struct ai566 *pwf566;
+	volatile struct wf085 *pwf085;
 
 	/* slot range checking occurs in wf_driver.c */
 
@@ -871,10 +869,9 @@ int xy566_driver(
  * polls the busy bit on the Xycom 566 latched waveform records
  * The busy bit is set externally when data collection is completed
  */
-static int xy566DoneTask()
+static void xy566DoneTask(void* ignore)
 {
-    unsigned int       **pproutines;
-    unsigned int       (*pcbroutine)();
+    pcb_fn            *pproutines;
     short	       i;
 
     while(TRUE){
@@ -887,8 +884,7 @@ static int xy566DoneTask()
 		/* check if the data is taken */
 		if ((pwf_xy085[i]->csr & XY_BUSY) == 0){
 			/* callback routine when data take completed */
-			(unsigned int *)pcbroutine = *pproutines;
-			(*pcbroutine)
+			(*pproutines)
 			    (pargument[i],pwf_xy566[i]->dram_ptr,pwf_mem[i]);
 
 			/* reset for someelse to claim */
@@ -897,9 +893,8 @@ static int xy566DoneTask()
 		}
 	}
 
-	/* sleep for .1 second - system degrade will slow this task */
-	/* that's OK						    */
-	taskDelay(2);	/* ges: changed from 6 ticks to 2 ticks 2/4/91 */
+	epicsThreadSleep(0.033);
+	/* was taskDelay(2); */
     }
 }
 
@@ -910,40 +905,40 @@ static int xy566DoneTask()
  */
 static long xy566_init(void)
 {
-	struct ai566   **pcards_present = pwf_xy566;
-	struct wf085   **parms_present = pwf_xy085;
-	char	       **pmem_present = pwf_mem;
+	volatile struct ai566   **pcards_present;
+	volatile struct wf085   **parms_present;
+	volatile unsigned char  **pmem_present;
 
 	short			shval,status;
 	short		i,got_one;
-	struct ai566	*pwf566;	/* VME location of cards */
-	struct wf085	*pwf085;	/* VME location of arm */
-	char		*pwfMem;	/* VME 566 memory buffer */
+	volatile struct ai566	*pwf566;	/* VME location of cards */
+	volatile struct wf085	*pwf085;	/* VME location of arm */
+	volatile unsigned char	*pwfMem;	/* VME 566 memory buffer */
 
-    pwf_xy566 = (struct ai566 **) 
+    pwf_xy566 = (volatile struct ai566 **) 
 	calloc(wf_num_cards[XY566WF], sizeof(*pwf_xy566));
     if(!pwf_xy566){
-	return ERROR;
+	return 1;
     }
-    pwf_xy085 = (struct wf085 **)
+    pwf_xy085 = (volatile struct wf085 **)
 	calloc(wf_num_cards[XY566WF], sizeof(*pwf_xy085));
     if(!pwf_xy085){
-	return ERROR;
+	return 1;
     }
-    pwf_mem = (char **) 
+    pwf_mem = (volatile unsigned char **) 
 	calloc(wf_num_cards[XY566WF], sizeof(*pwf_mem));
     if(!pwf_mem){
-	return ERROR;
+	return 1;
     }
-    pargument = (unsigned int **) 
+    pargument = (void **) 
 	calloc(wf_num_cards[XY566WF], sizeof(*pargument));
     if(!pargument){
-	return ERROR;
+	return 1;
     }
-    proutine = (unsigned int **)
+    proutine = (pcb_fn*)
 	calloc(wf_num_cards[XY566WF], sizeof(*proutine));
     if(!proutine){
-	return ERROR;
+	return 1;
     }
 
     pcards_present = pwf_xy566;
@@ -951,31 +946,22 @@ static long xy566_init(void)
     pmem_present = pwf_mem;
 
     /* map the io card into the VME short address space */
-    status = sysBusToLocalAdrs(
-		VME_AM_SUP_SHORT_IO,
-		(char *)(long)WF_XY566_BASE, 
-		(char **)&pwf566);
+    status = devBusToLocalAddr(atVMEA16, WF_XY566_BASE, (volatile void**)&pwf566);
     if(status < 0){
-	logMsg("%s: unable to map A16 XY566 base\n", (int)__FILE__, 0,0,0,0,0);
-   	return ERROR;
+	errlogPrintf("%s: unable to map A16 XY566 base\n", __FILE__);
+   	return 1;
     }
 
-    status = sysBusToLocalAdrs(
-		VME_AM_SUP_SHORT_IO,
-		(char *)(long)WF_XY085_BASE, 
-		(char **)&pwf085);
+    status = devBusToLocalAddr(atVMEA16, WF_XY085_BASE, (volatile void**)&pwf085);
     if(status < 0){
-	logMsg("%s: unable to map A16 XY085 base\n", (int)__FILE__, 0,0,0,0,0);
-   	return ERROR;
+	errlogPrintf("%s: unable to map A16 XY085 base\n", __FILE__);
+   	return 1;
     }
 
-    status = sysBusToLocalAdrs(
-		VME_AM_STD_SUP_DATA,
-		(char *)wf_memaddrs[XY566WF],
-		(char **)&pwfMem);
-    if (status != OK){
-	logMsg("%s: unable to map A24 XY566 base\n", (int)__FILE__, 0,0,0,0,0);
-   	return ERROR;
+    status = devBusToLocalAddr(atVMEA24, wf_memaddrs[XY566WF], (volatile void**)&pwfMem);
+    if (status != 0){
+	errlogPrintf("%s: unable to map A24 XY566 base\n", __FILE__);
+   	return 1;
     }
 
     /* mark each card present into the card present array */
@@ -985,17 +971,17 @@ static long xy566_init(void)
       i++, pwf566++,pwf085++,pwfMem += XY566_MEM_INCR, pcards_present += 1) {
 
 	/* is the Xycom 566 here */
-	if (vxMemProbe((char *)pwf566,READ,sizeof(short),(char *)&shval) != OK){
+	if (devReadProbe(sizeof(short), pwf566, &shval) !=0){
 		*pcards_present = 0;
 		continue;
 	}
 	/* is the Xycom 566 memory here */
-	if (vxMemProbe((char *)pwfMem,READ,sizeof(short),(char *)&shval) != OK){
+	if (devReadProbe(sizeof(short), pwfMem, &shval) !=0){
 		*pcards_present = 0;
 		continue;
 	}
 	/* is the Xycom 085 used as the arming mechanism present */
-	if (vxMemProbe((char *)pwf085,READ,sizeof(short),(char *)&shval) != OK){
+	if (devReadProbe(sizeof(short), pwf085, &shval) !=0){
 		*pcards_present = 0;
 		continue;
 	}
@@ -1095,16 +1081,14 @@ static long xy566_init(void)
     }
 
     /* start the 566 waveform readback task */
-    if (got_one)
-	wfDoneId = 
-	   taskSpawn(
-		WFDONE_NAME,
-		WFDONE_PRI,
-		WFDONE_OPT,
-		WFDONE_STACK,
-		xy566DoneTask,
-		0,0,0,0,0,0,0,0,0,0);
-	taskwdInsert(wfDoneId,NULL,NULL);
+    if (got_one) {
+	wfDoneId = epicsThreadCreate("WFDONE",
+			epicsThreadPriorityMedium,
+			epicsThreadGetStackSize(epicsThreadStackMedium),
+			xy566DoneTask,
+			NULL
+	);
+    }
 
     return 0;
 }
