@@ -39,28 +39,19 @@
  * .17	08-04-93	mgb	Removed V5/V4 and EPICS_V2 conditionals
  */
 
+#include <stdlib.h>
 #include <stdio.h>
-#include <vxWorks.h>
-#include <taskLib.h>
-#include <sysLib.h>
-#include <vme.h>
-#include <vxLib.h>
 
-#include "module_types.h"
-#include "task_params.h"
 #include "drvSup.h"
 #include "dbDefs.h"
 #include "dbScan.h"
 #include "taskwd.h"
+#include <epicsThread.h>
+#include <devLib.h>
 
 #include "dbAccess.h"
 #include <epicsExport.h>
 #include "drvXy240.h"
-
-
-#define XY240_ADDR0	((char *) (long) bi_addrs[XY240_BI])
-#define XY240_MAX_CARDS	(bi_num_cards[XY240_BI])
-#define XY240_MAX_CHANS	(bi_num_channels[XY240_BI])
 
 #define masks(K) ((1<<K))
 
@@ -69,7 +60,8 @@ struct dio_xy240{
         char            begin_pad[0x80];        /*go to interface block*/
         unsigned short  csr;                    /*control status register*/
         unsigned short  isr;                    /*interrupt service routine*/
-        unsigned short  iclr_vec;               /*interrupt clear/vector*/
+        unsigned short  iclr_vec; 
+              /*interrupt clear/vector*/
         unsigned short  flg_dir;                /*flag&port direction*/
         unsigned short  port0_1;                /*port0&1 16 bits value*/
         unsigned short  port2_3;                /*por2&3 16 bits value*/
@@ -81,7 +73,7 @@ struct dio_xy240{
 /*create dio control structure record*/
 struct dio_rec
         {
-        struct dio_xy240 *dptr;                 /*pointer to registers*/
+        volatile struct dio_xy240 *dptr;                 /*pointer to registers*/
         short num;                              /*device number*/
         short mode;                             /*operating mode*/
         unsigned short sport0_1;                /*saved inputs*/
@@ -92,9 +84,13 @@ struct dio_rec
         };
 
 
-LOCAL
-struct dio_rec *dio;	/*define array of control structures*/
+static unsigned int first_base_addr=0;
 
+static struct dio_rec *dio;	/*define array of control structures*/
+static unsigned int card_count=0;
+
+static long xy240_init(void);
+static long xy240_io_report(int level);
 
 struct {
         long    number;
@@ -114,20 +110,21 @@ epicsExportAddress(drvet,drvXy240);
  *task to check for change of state
  *
  */
-static int dio_scan()
+static
+void dio_scan(void *ignore)
 {	
 	int i;
 	int	first_scan,first_scan_complete;
 
  for(;;){
     if(interruptAccept) break;
-    taskDelay(sysClkRateGet()/30);
+    epicsThreadSleep(0.01); /* 0.01 is arbitrary */
  }
  first_scan_complete = FALSE;
  first_scan = TRUE;
  for (;;) 
  {
-   for (i = 0; i < XY240_MAX_CARDS; i++)
+   for (i = 0; i < card_count; i++)
     {
     if (dio[i].dptr)
      if (((dio[i].dptr->port0_1) ^ (dio[i].sport0_1)) || 
@@ -144,12 +141,12 @@ static int dio_scan()
 	first_scan = 0;
 	first_scan_complete = 1;
     }
-    taskDelay(sysClkRateGet()/30);	
+    epicsThreadSleep(0.01);
   }
 }
 
+static epicsThreadId scanner;
 
-
 /*DIO DRIVER INIT
  *
  *initialize xy240 dig i/o card
@@ -159,7 +156,6 @@ long xy240_init()
 	short 			junk;
 	register short 		i;
 	struct dio_xy240	*pdio_xy240;
-	int 			tid;
 	int			status;
 	int			at_least_one_present = FALSE;
 
@@ -167,20 +163,21 @@ long xy240_init()
 	 * allow for runtime reconfiguration of the
 	 * addr map
 	 */
-	dio = (struct dio_rec *) calloc(XY240_MAX_CARDS, sizeof(*dio));
+	dio = (struct dio_rec *) calloc(card_count, sizeof(*dio));
 	if(!dio){
-		return ERROR;
+		return 1;
 	}
 
-	status = sysBusToLocalAdrs(VME_AM_SUP_SHORT_IO,XY240_ADDR0,(char **)&pdio_xy240);
-        if (status != OK){
+	status = devBusToLocalAddr(atVMEA16, first_base_addr,
+		(volatile void**)&pdio_xy240);
+        if (status != 0){
            	printf("%s: Unable to map the XY240 A16 base addr\n", __FILE__);
-           	return ERROR;
+           	return 1;
         }
 
-        for (i = 0; i < XY240_MAX_CARDS; i++, pdio_xy240++){
-	  
-		if (vxMemProbe((char *)pdio_xy240,READ,2,(char *)&junk) != OK){
+        for (i = 0; i < card_count; i++, pdio_xy240++){
+
+		if (devReadProbe(sizeof(short), pdio_xy240, &junk) ==0){
 	   		dio[i].dptr = 0;
     			continue;
 		} 
@@ -199,32 +196,26 @@ long xy240_init()
 				
  	if (at_least_one_present) 
   	{
-   		if ((tid = taskNameToId(XY240_NAME)) != ERROR){
-			taskwdRemove( tid);
-   			taskDelete(tid);
-		}
 
-		status = taskSpawn(
-			XY240_NAME,
-			XY240_PRI,
-			XY_240_OPT,
-			XY_240_STACK,
-			dio_scan,0,0,0,0,0,0,0,0,0,0);
-   		if (status == ERROR){
+		scanner = epicsThreadCreate("240scan",
+			epicsThreadPriorityMedium,
+			epicsThreadGetStackSize(epicsThreadStackMedium),
+			dio_scan,
+			NULL
+		);
+   		if (!scanner){
   			printf("Unable to create XY240 scan task\n");
+			return 0;
 		}
-		else taskwdInsert( status,NULL,NULL);
   	}
 
-
-
-	return OK;
+	return 0;
 
 } 	
 
 long xy240_getioscanpvt(short card, IOSCANPVT *scanpvt)
 {
-        if ((card >= XY240_MAX_CARDS) || (!dio[card].dptr)) return(0);
+        if ((card >= card_count) || (!dio[card].dptr)) return(0);
         *scanpvt = dio[card].ioscanpvt;
         return(0);
 }
@@ -240,7 +231,7 @@ long xy240_bi_driver(short card, unsigned long mask, unsigned long *prval)
 {
 	register unsigned int	work;
 
-	if ((card >= XY240_MAX_CARDS) || (!dio[card].dptr)) 
+	if ((card >= card_count) || (!dio[card].dptr)) 
 	 return -1;
 	work = (dio[card].dptr->port0_1 << 16)
 	 + dio[card].dptr->port2_3;
@@ -260,7 +251,7 @@ long xy240_bo_read(short card, unsigned long mask, unsigned long *prval)
 {
 	unsigned long	work;
  
-	if ((card >= XY240_MAX_CARDS) || (!dio[card].dptr)){ 
+	if ((card >= card_count) || (!dio[card].dptr)){ 
 		 return -1;
         }
               
@@ -282,8 +273,8 @@ long xy240_bo_driver(short card, unsigned long val, unsigned long mask)
 {
 	unsigned long	work;
 
- 	if ((card >= XY240_MAX_CARDS) || (!dio[card].dptr)) 
-		 return ERROR;
+ 	if ((card >= card_count) || (!dio[card].dptr)) 
+		 return 1;
 
 	/* use structure to handle high and low short swap */
 	/* get current output */
@@ -296,7 +287,7 @@ long xy240_bo_driver(short card, unsigned long val, unsigned long mask)
 	dio[card].dptr->port4_5 = (unsigned short)(work >> 16);
 	dio[card].dptr->port6_7 = (unsigned short)work;
 
-	return OK;
+	return 0;
  }
 
 
@@ -307,7 +298,7 @@ long xy240_bo_driver(short card, unsigned long val, unsigned long mask)
 int xy240_dio_out(short card,short port,short val)
 {
 
- if ((card > XY240_MAX_CARDS-1)) 		/*test to see if card# is allowable*/
+ if ((card > card_count-1)) 		/*test to see if card# is allowable*/
   {
   printf("card # out of range\n");
   return -1;
@@ -364,55 +355,33 @@ int xy240_write(card,val)
                           
 void xy240_bi_io_report(int card)
 {
-        short int num_chans,j,k,l,m;
-        unsigned long jval,kval,lval,mval;
+        short int num_chans,j;
+        unsigned long val;
 
-        num_chans = XY240_MAX_CHANS;
+        num_chans = 32;
 
         if(!dio[card].dptr){
 		return;
 	}
 
 	printf("\tXY240 BINARY IN CHANNELS:\n");
-	for(	j=0,k=1,l=2,m=3;
-		j < num_chans && k < num_chans && l< num_chans && m < num_chans; 
-		j+=IOR_MAX_COLS,k+= IOR_MAX_COLS,l+= IOR_MAX_COLS, m += IOR_MAX_COLS){
-                         
+	for(	j=0; j < num_chans; j++){
 
-		if(j < num_chans){
-			xy240_bi_driver(card,masks(j),&jval);
-			if (jval != 0) 
-				jval = 1;
-			printf("\tChan %d = %lx\t ",j,jval);
-		}
-		if(k < num_chans){
-			xy240_bi_driver(card,masks(k),&kval);
-			if (kval != 0) 
-				kval = 1;
-			printf("Chan %d = %lx\t ",k,kval);
-		}
-		if(l < num_chans){
-			xy240_bi_driver(card,masks(l),&lval);
-			if (lval != 0) 
-				lval = 1;
-			printf("Chan %d = %lx \t",l,lval);
-		}
-		if(m < num_chans){
-			xy240_bi_driver(card,masks(m),&mval);
-			if (mval != 0) 
-				mval = 1;
-			printf("Chan %d = %lx \n",m,mval);
-		}
+		xy240_bi_driver(card,masks(j),&val);
+		printf("\tChan %d = %lx\t ",j,val);
+
+		if(j%4==3)
+			printf("\n");
 	}
 }
 
 
 void xy240_bo_io_report(int card)
 {
-        short int num_chans,j,k,l,m;
-        unsigned long jval,kval,lval,mval;
+        short int num_chans,j;
+        unsigned long val;
 
-        num_chans = XY240_MAX_CHANS;
+        num_chans = 32;
 
 	if(!dio[card].dptr){
 		return;
@@ -420,34 +389,13 @@ void xy240_bo_io_report(int card)
 
 	printf("\tXY240 BINARY OUT CHANNELS:\n");
 
-	for(	j=0,k=1,l=2,m=3;
-		j < num_chans && k < num_chans && l < num_chans && m < num_chans; 
-		j+=IOR_MAX_COLS,k+= IOR_MAX_COLS,l+= IOR_MAX_COLS, m += IOR_MAX_COLS){
+	for(	j=0; j < num_chans; j++){
 
-		if(j < num_chans){
-			xy240_bo_read(card,masks(j),&jval);
-			if (jval != 0) 
-				jval = 1; 
-			printf("\tChan %d = %lx\t ",j,jval);
-		}
-		if(k < num_chans){
-			xy240_bo_read(card,masks(k),&kval);
-			if (kval != 0) 
-				kval = 1; 
- 			printf("Chan %d = %lx\t ",k,kval);
-		}
-		if(l < num_chans){
-			xy240_bo_read(card,masks(l),&lval);
-			if (lval != 0) 
-				lval = 1; 
-			printf("Chan %d = %lx \t",l,lval);
-		}
-		if(m < num_chans){
-			xy240_bo_read(card,masks(m),&mval);
-			if (mval != 0) 
-				mval = 1; 
-			printf("Chan %d = %lx \n",m,mval);
-		}
+		xy240_bo_read(card,masks(j),&val);
+		printf("\tChan %d = %lx\t ",j,val);
+
+		if(j%4==3)
+			printf("\n");
 	}
 }
 
@@ -456,7 +404,7 @@ long xy240_io_report(int level)
 {
   	int card;
 
-        for (card = 0; card < XY240_MAX_CARDS; card++){
+        for (card = 0; card < card_count; card++){
         
                 if(dio[card].dptr){
                    printf("B*: XY240:\tcard %d\n",card);

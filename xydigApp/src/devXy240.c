@@ -17,7 +17,6 @@
  * .01  08-02-92        mrk     Original version
  */
 
-#include <vxWorks.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -31,7 +30,6 @@
 #include "devSup.h"
 #include "dbScan.h"
 #include "link.h"
-#include "module_types.h"
 #include "biRecord.h"
 #include "boRecord.h"
 #include "mbbiRecord.h"
