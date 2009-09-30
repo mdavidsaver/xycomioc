@@ -35,19 +35,18 @@ static struct {char **ps; char *s;} RCSID = {&RCSID.s,
  * bo_driver	Interfaces to the binary output cards present
  */
 
-#include <vxWorks.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <sysLib.h>
-#include <vxLib.h>
-#include <vme.h>
-
-#include "module_types.h"
-#include "drvSup.h"
+#include <drvSup.h>
 #include <epicsExport.h>
+#include <devLib.h>
+#include <iocsh.h>
+#include <errlog.h>
 
 #include "drvXy220.h"
-
+
+static long xy220_driver_init(void);
+static long xy220_io_report(int level);
 
 struct {
         long    number;
@@ -60,11 +59,8 @@ struct {
 epicsExportAddress(drvet,drvXy220);
 
 
-#define XY_LED          0x3     /* set the Xycom status LEDs to OK */
+#define XY_LED          0x3     /* set the Xycom status LEDs to 0 */
 #define XY_SOFTRESET    0x10    /* reset the IO card */
-
-/* maximum number of VME binary output cards per IOC */
-#define MAX_XY220_BO_CARDS 	bo_num_cards[XY220]
 
 /* Xycom 220 binary output memory structure */
 struct bo_xy220{
@@ -75,9 +71,11 @@ struct bo_xy220{
         char    end_pad[0x400-0x80-6];  /* pad until next card */
 };
 
+static unsigned int first_base_addr=0;
 
 /* pointers to the binary output cards */
-struct bo_xy220	**pbo_xy220s;	/* Xycom 220s */
+volatile struct bo_xy220	**pbo_xy220s;	/* Xycom 220s */
+static unsigned int card_count=0;
 
 
 /*
@@ -85,33 +83,37 @@ struct bo_xy220	**pbo_xy220s;	/* Xycom 220s */
  *
  * intialization for the xy220 binary output cards
  */
-long xy220_driver_init()
+static
+long xy220_driver_init(void)
 {
 	int bomode;
         int status;
 	register short	i;
 	struct bo_xy220	*pbo_xy220;
 
-	pbo_xy220s = (struct bo_xy220 **)
-		calloc(MAX_XY220_BO_CARDS, sizeof(*pbo_xy220s));
+	if(card_count==0){
+		errMessage(errlogMajor,"Number of 220 cards not set.  Call xy220setup() before iocInit()");
+		return 1;
+	}
+
+	pbo_xy220s = (volatile struct bo_xy220 **)
+		calloc(card_count, sizeof(*pbo_xy220s));
 	if(!pbo_xy220s){
-		return ERROR;
+		return 1;
 	}
 
 	/* initialize the Xycom 220 binary output cards */
 	/* base address of the xycom 220 binary output cards */
-	status = sysBusToLocalAdrs(
-			VME_AM_SUP_SHORT_IO,
-			(char *) (long) bo_addrs[XY220],
-			(char **) &pbo_xy220);
-        if (status != OK){
+	status = devBusToLocalAddr(atVMEA16, first_base_addr,
+		(volatile void**)&pbo_xy220);
+        if (status != 0){
            printf("%s: xy220 A16 base map failure\n", __FILE__);
-           return ERROR;
+           return 1;
         }
 
 	/* determine which cards are present */
-	for (i = 0; i < MAX_XY220_BO_CARDS; i++,pbo_xy220++){
-	    if (vxMemProbe((char *) pbo_xy220, READ, sizeof(short), (char *) &bomode) == OK){
+	for (i = 0; i < card_count; i++,pbo_xy220++){
+	    if (devReadProbe(sizeof(short), pbo_xy220, &bomode) ==0){
 		pbo_xy220s[i] = pbo_xy220;
 		pbo_xy220s[i]->csr = XY_SOFTRESET;
 		pbo_xy220s[i]->csr = XY_LED;
@@ -178,12 +180,13 @@ long xy220_read(unsigned short card, unsigned long mask, unsigned long *pval)
  *
 */
 
+static
 long xy220_io_report(int level)
 {
    int		card;
    unsigned int	value;
 
-   for (card = 0; card < MAX_XY220_BO_CARDS; card++){
+   for (card = 0; card < card_count; card++){
 	if (pbo_xy220s[card]){
 	   value = (pbo_xy220s[card]->high_value << 16)    /* high */
 		+ pbo_xy220s[card]->low_value;               /* low */
@@ -192,3 +195,31 @@ long xy220_io_report(int level)
    }  
    return (0);
  }
+
+static
+void xy220setup(int cards, int start_addr)
+{
+  card_count=cards;
+  first_base_addr=start_addr;
+}
+
+/* xy220setup */
+static const iocshArg xy220setupArg0 = { "Number of cards",iocshArgInt};
+static const iocshArg xy220setupArg1 = { "VME base address of first card",iocshArgInt};
+static const iocshArg * const xy220setupArgs[2] =
+{
+    &xy220setupArg0,&xy220setupArg1
+};
+static const iocshFuncDef xy220setupFuncDef =
+    {"xy220setup",2,xy220setupArgs};
+static void xy220setupCallFunc(const iocshArgBuf *args)
+{
+    xy220setup(args[0].ival,args[1].ival);
+}
+
+static
+void xy220Register(void)
+{
+  iocshRegister(&xy220setupFuncDef,xy220setupCallFunc);
+}
+epicsExportRegistrar(xy220Register);
