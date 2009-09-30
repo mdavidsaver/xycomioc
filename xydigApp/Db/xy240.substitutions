@@ -1,0 +1,20 @@
+
+file db/xybo.db
+{
+pattern
+{C, N, PV, DTYP, DESC, PINI, VAL, ZNAM, ONAM}
+{0, 0, "xy240:out${N}", 240, "Output ${N}", Yes, 0, "Zero", "One"}
+{0, 1, "xy240:out${N}", 240, "Output ${N}", Yes, 0, "Zero", "One"}
+{0, 2, "xy240:out${N}", 240, "Output ${N}", Yes, 0, "Zero", "One"}
+{0, 3, "xy240:out${N}", 240, "Output ${N}", Yes, 0, "Zero", "One"}
+}
+
+file db/xybi.db
+{
+pattern
+{C, N, PV, DTYP, SCAN, DESC, PINI, VAL, ZNAM, ONAM}
+{0, 0, "xy240:in${N}", 240, "I/O Intr", "Input ${N}", Yes, 0, "Zero", "One"}
+{0, 1, "xy240:in${N}", 240, "I/O Intr", "Input ${N}", Yes, 0, "Zero", "One"}
+{0, 2, "xy240:in${N}", 240, "I/O Intr", "Input ${N}", Yes, 0, "Zero", "One"}
+{0, 3, "xy240:in${N}", 240, "I/O Intr", "Input ${N}", Yes, 0, "Zero", "One"}
+}
