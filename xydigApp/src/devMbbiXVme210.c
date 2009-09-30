@@ -23,7 +23,6 @@
  */
 
 
-#include <vxWorks.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -34,7 +33,6 @@
 #include "recGbl.h"
 #include "recSup.h"
 #include "devSup.h"
-#include "module_types.h"
 #include "mbbiRecord.h"
 #include <epicsExport.h>
 

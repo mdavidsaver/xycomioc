@@ -34,18 +34,19 @@
  */
 
 
-#include <vxWorks.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <vxLib.h>
-#include <sysLib.h>
-#include <vme.h>
-#include <module_types.h>
 #include <drvSup.h>
 #include <epicsExport.h>
+#include <devLib.h>
+#include <iocsh.h>
+#include <errlog.h>
 
 #include "drvXy210.h"
-
+
+static long xy210_driver_init(void);
+static long xy210_io_report(int level);
+
 struct {
         long    number;
         DRVSUPFUN       report;
@@ -61,8 +62,6 @@ epicsExportAddress(drvet,drvXy210);
 static struct {char **sc; char *s;} RCSID = {&RCSID.s, 
     "drvXy210.c,v 1.1 2003/08/27 15:21:40 mrk Exp"};
 
-#define MAX_XY_BI_CARDS	(bi_num_cards[XY210]) 
-
 /* Xycom 210 binary input memory structure */
 /* Note: the high and low order words are switched from the io card */
 struct bi_xy210{
@@ -72,44 +71,48 @@ struct bi_xy210{
         char    end_pad[0x400-0xc0-4];  /* pad until next card */
 };
 
+static unsigned int first_base_addr=0;
 
 /* pointers to the binary input cards */
-struct bi_xy210 **pbi_xy210s;      /* Xycom 210s */
+static volatile struct bi_xy210 **pbi_xy210s;      /* Xycom 210s */
+static unsigned int card_count=0;
 
-/* test word for forcing bi_driver */
-int	bi_test;
-
-static char *xy210_addr;
-
-
 /*
  * BI_DRIVER_INIT
  *
  * intialization for the binary input cards
  */
-long xy210_driver_init()
+static
+long xy210_driver_init(void)
 {
 	int bimode;
         int status;
-        register short  i;
-        struct bi_xy210  *pbi_xy210;
+        short  i;
+        volatile struct bi_xy210  *pbi_xy210;
 
-	pbi_xy210s = (struct bi_xy210 **)
-		calloc(MAX_XY_BI_CARDS, sizeof(*pbi_xy210s));
+	if(card_count==0){
+		errMessage(errlogMajor,"Number of 210 cards not set.  Call xy210setup() before iocInit()");
+		return 1;
+	}
+
+	pbi_xy210s = (volatile struct bi_xy210 **)
+		calloc(card_count, sizeof(*pbi_xy210s));
 	if(!pbi_xy210s){
-		return ERROR;
+		return 1;
 	}
 
         /* initialize the Xycom 210 binary input cards */
         /* base address of the xycom 210 binary input cards */
-        if ((status = sysBusToLocalAdrs(VME_AM_SUP_SHORT_IO,(char *)(long)bi_addrs[XY210],&xy210_addr)) != OK){ 
+	status = devBusToLocalAddr(atVMEA16, first_base_addr,
+		(volatile void**)&pbi_xy210);
+        if (status != 0){ 
            printf("Addressing error in xy210 driver\n");
-           return ERROR;
+           return 1;
         }
-        pbi_xy210 = (struct bi_xy210 *)xy210_addr;  
+
         /* determine which cards are present */
-        for (i = 0; i <bi_num_cards[XY210]; i++,pbi_xy210++){
-          if (vxMemProbe((char *)pbi_xy210,READ,sizeof(short),(char *)&bimode) == OK){
+        for (i = 0; i <card_count; i++,pbi_xy210++){
+          if (devReadProbe(sizeof(short), pbi_xy210, &bimode) ==0){
                 pbi_xy210s[i] = pbi_xy210;
           } else {
                 pbi_xy210s[i] = 0;
@@ -125,7 +128,7 @@ long xy210_driver_init()
  */
 long xy210_driver(unsigned short card, unsigned long mask, unsigned long *prval)
 {
-	register unsigned int	work;
+	unsigned int	work;
 
                 /* verify card exists */
                 if (!pbi_xy210s[card]){
@@ -142,13 +145,14 @@ long xy210_driver(unsigned short card, unsigned long mask, unsigned long *prval)
                        
 	return (0);
 }
-
+
+static
 long xy210_io_report(int level)
  { 
    int			card;
    unsigned int 	value;
    
-   for (card = 0; card < bi_num_cards[XY210]; card++){
+   for (card = 0; card < card_count; card++){
 	 if (pbi_xy210s[card]){
            value = (pbi_xy210s[card]->high_value << 16)    /* high */
                    + pbi_xy210s[card]->low_value;               /* low */
@@ -157,3 +161,31 @@ long xy210_io_report(int level)
    }
    return (0);
 }
+
+static
+void xy210setup(int cards, int start_addr)
+{
+  card_count=cards;
+  first_base_addr=start_addr;
+}
+
+/* xy210setup */
+static const iocshArg xy210setupArg0 = { "Number of cards",iocshArgInt};
+static const iocshArg xy210setupArg1 = { "VME base address of first card",iocshArgInt};
+static const iocshArg * const xy210setupArgs[2] =
+{
+    &xy210setupArg0,&xy210setupArg1
+};
+static const iocshFuncDef xy210setupFuncDef =
+    {"xy210setup",2,xy210setupArgs};
+static void xy210setupCallFunc(const iocshArgBuf *args)
+{
+    xy210setup(args[0].ival,args[1].ival);
+}
+
+static
+void xy210Register(void)
+{
+  iocshRegister(&xy210setupFuncDef,xy210setupCallFunc);
+}
+epicsExportRegistrar(xy210Register);
