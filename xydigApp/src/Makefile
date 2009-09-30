@@ -1,7 +1,7 @@
-TOP=..
+TOP=../..
 include $(TOP)/configure/CONFIG
 
-LIBRARY_IOC_vxWorks += xycomDigital
+LIBRARY_IOC += xycomDigital
 xycomDigital_LIBS += $(EPICS_BASE_IOC_LIBS)
 
 DBD += xy210.dbd
