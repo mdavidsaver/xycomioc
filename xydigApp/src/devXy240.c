@@ -103,7 +103,7 @@ static long read_bi(struct biRecord	*pbi)
 {
 	struct vmeio *pvmeio;
 	int	    status;
-	unsigned long	    value;
+	epicsUInt32	    value;
 
 	
 	pvmeio = (struct vmeio *)&(pbi->inp.value);
@@ -119,7 +119,7 @@ static long read_bi(struct biRecord	*pbi)
 
 static long init_bo(struct boRecord	*pbo)
 {
-    unsigned long value;
+    epicsUInt32 value;
     int status=0;
     struct vmeio *pvmeio;
 
@@ -185,7 +185,7 @@ static long read_mbbi(struct mbbiRecord	*pmbbi)
 {
 	struct vmeio	*pvmeio;
 	int		status;
-	unsigned long	value;
+	epicsUInt32	value;
 
 	
 	pvmeio = (struct vmeio *)&(pmbbi->inp.value);
@@ -200,7 +200,7 @@ static long read_mbbi(struct mbbiRecord	*pmbbi)
 
 static long init_mbbo(struct mbboRecord	*pmbbo)
 {
-    unsigned long value;
+    epicsUInt32 value;
     struct vmeio *pvmeio;
     int		status = 0;
 
@@ -226,7 +226,7 @@ static long write_mbbo(struct mbboRecord	*pmbbo)
 {
 	struct vmeio *pvmeio;
 	int	    status;
-	unsigned long value;
+	epicsUInt32 value;
 
 	
 	pvmeio = &(pmbbo->out.value.vmeio);

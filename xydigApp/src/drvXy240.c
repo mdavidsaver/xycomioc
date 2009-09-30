@@ -48,6 +48,7 @@
 #include "taskwd.h"
 #include <epicsThread.h>
 #include <devLib.h>
+#include <iocsh.h>
 
 #include "dbAccess.h"
 #include <epicsExport.h>
@@ -57,17 +58,16 @@
 
 /*xy240 memory structure*/
 struct dio_xy240{
-        char            begin_pad[0x80];        /*go to interface block*/
-        unsigned short  csr;                    /*control status register*/
-        unsigned short  isr;                    /*interrupt service routine*/
-        unsigned short  iclr_vec; 
-              /*interrupt clear/vector*/
-        unsigned short  flg_dir;                /*flag&port direction*/
-        unsigned short  port0_1;                /*port0&1 16 bits value*/
-        unsigned short  port2_3;                /*por2&3 16 bits value*/
-        unsigned short  port4_5;                /*port4&5 16 bits value*/
-        unsigned short  port6_7;                /*port6&7 16 bits value*/
-        char            end_pad[0x400-0x80-16]; /*pad til next card*/
+        epicsUInt8   begin_pad[0x80];        /*go to interface block*/
+        epicsUInt16  csr;                    /*control status register*/
+        epicsUInt16  isr;                    /*interrupt service routine*/
+        epicsUInt16  iclr_vec;               /*interrupt clear/vector*/
+        epicsUInt16  flg_dir;                /*flag&port direction*/
+        epicsUInt16  port0_1;                /*port0&1 16 bits value*/
+        epicsUInt16  port2_3;                /*por2&3 16 bits value*/
+        epicsUInt16  port4_5;                /*port4&5 16 bits value*/
+        epicsUInt16  port6_7;                /*port6&7 16 bits value*/
+        epicsUInt8   end_pad[0x400-0x80-16]; /*pad til next card*/
 };
 
 /*create dio control structure record*/
@@ -151,10 +151,11 @@ static epicsThreadId scanner;
  *
  *initialize xy240 dig i/o card
  */
+static
 long xy240_init()
 {
 	short 			junk;
-	register short 		i;
+	short 		i;
 	struct dio_xy240	*pdio_xy240;
 	int			status;
 	int			at_least_one_present = FALSE;
@@ -227,9 +228,9 @@ long xy240_getioscanpvt(short card, IOSCANPVT *scanpvt)
  *interface to binary inputs
  */
 
-long xy240_bi_driver(short card, unsigned long mask, unsigned long *prval)
+long xy240_bi_driver(short card, epicsUInt32 mask, epicsUInt32 *prval)
 {
-	register unsigned int	work;
+	epicsUInt32	work;
 
 	if ((card >= card_count) || (!dio[card].dptr)) 
 	 return -1;
@@ -247,9 +248,9 @@ long xy240_bi_driver(short card, unsigned long mask, unsigned long *prval)
  *interface to binary outputs
  */
 
-long xy240_bo_read(short card, unsigned long mask, unsigned long *prval)
+long xy240_bo_read(short card, epicsUInt32 mask, epicsUInt32 *prval)
 {
-	unsigned long	work;
+	epicsUInt32	work;
  
 	if ((card >= card_count) || (!dio[card].dptr)){ 
 		 return -1;
@@ -269,9 +270,9 @@ long xy240_bo_read(short card, unsigned long mask, unsigned long *prval)
  *interface to binary outputs
  */
 
-long xy240_bo_driver(short card, unsigned long val, unsigned long mask)
+long xy240_bo_driver(short card, epicsUInt32 val, epicsUInt32 mask)
 {
-	unsigned long	work;
+	epicsUInt32	work;
 
  	if ((card >= card_count) || (!dio[card].dptr)) 
 		 return 1;
@@ -344,19 +345,17 @@ else{
  *command line interface to test bo driver
  *
  */
-int xy240_write(card,val)
-        short card;
-        unsigned int val;
+int xy240_write(short card,epicsUInt32 val)
  {
   return xy240_bo_driver(card,val,0xffffffff);
  }
  
 
-                          
+static
 void xy240_bi_io_report(int card)
 {
-        short int num_chans,j;
-        unsigned long val;
+        short num_chans,j;
+        epicsUInt32 val;
 
         num_chans = 32;
 
@@ -368,18 +367,18 @@ void xy240_bi_io_report(int card)
 	for(	j=0; j < num_chans; j++){
 
 		xy240_bi_driver(card,masks(j),&val);
-		printf("\tChan %d = %lx\t ",j,val);
+		printf("\tChan %d = %lx\t ",j,(unsigned long)val);
 
 		if(j%4==3)
 			printf("\n");
 	}
 }
 
-
+static
 void xy240_bo_io_report(int card)
 {
-        short int num_chans,j;
-        unsigned long val;
+        short num_chans,j;
+        epicsUInt32 val;
 
         num_chans = 32;
 
@@ -392,14 +391,14 @@ void xy240_bo_io_report(int card)
 	for(	j=0; j < num_chans; j++){
 
 		xy240_bo_read(card,masks(j),&val);
-		printf("\tChan %d = %lx\t ",j,val);
+		printf("\tChan %d = %lx\t ",j,(unsigned long)val);
 
 		if(j%4==3)
 			printf("\n");
 	}
 }
 
-
+static
 long xy240_io_report(int level)
 {
   	int card;
@@ -417,3 +416,30 @@ long xy240_io_report(int level)
         return(0); 
 }
 
+static
+void xy240setup(int cards, int start_addr)
+{
+  card_count=cards;
+  first_base_addr=start_addr;
+}
+
+/* xy240setup */
+static const iocshArg xy240setupArg0 = { "Number of cards",iocshArgInt};
+static const iocshArg xy240setupArg1 = { "VME base address of first card",iocshArgInt};
+static const iocshArg * const xy240setupArgs[2] =
+{
+    &xy240setupArg0,&xy240setupArg1
+};
+static const iocshFuncDef xy240setupFuncDef =
+    {"xy240setup",2,xy240setupArgs};
+static void xy240setupCallFunc(const iocshArgBuf *args)
+{
+    xy240setup(args[0].ival,args[1].ival);
+}
+
+static
+void xy240Register(void)
+{
+  iocshRegister(&xy240setupFuncDef,xy240setupCallFunc);
+}
+epicsExportRegistrar(xy240Register);

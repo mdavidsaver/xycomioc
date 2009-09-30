@@ -6,8 +6,8 @@
  */
 
 long xy240_getioscanpvt(short card, IOSCANPVT *scanpvt);
-long xy240_bi_driver(short card, unsigned long mask, unsigned long *prval);
-long xy240_bo_read(short card, unsigned long mask, unsigned long *prval);
-long xy240_bo_driver(short card, unsigned long val, unsigned long mask);
+long xy240_bi_driver(short card, epicsUInt32 mask, epicsUInt32 *prval);
+long xy240_bo_read(short card, epicsUInt32 mask, epicsUInt32 *prval);
+long xy240_bo_driver(short card, epicsUInt32 val, epicsUInt32 mask);
 
 #endif /* DRVXY240_H */
