@@ -1,3 +1,6 @@
+#ifndef DRVXY566_H
+#define DRVXY566_H 1
+
 /*
  * Header file for drvXy566.c
  */
@@ -24,3 +27,5 @@ int xy566_driver(
     pcb_fn         pcbroutine,
     void           *parg
 );
+
+#endif /* DRVXY566_H */
