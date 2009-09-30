@@ -1,0 +1,10 @@
+
+file db/xybo.db
+{
+pattern
+{C, N, PV, DTYP, DESC, PINI, VAL, ZNAM, ONAM}
+{0, 0, "xy220:chan${N}", 220, "Chan ${N}", Yes, 0, "Zero", "One"}
+{0, 1, "xy220:chan${N}", 220, "Chan ${N}", Yes, 0, "Zero", "One"}
+{0, 2, "xy220:chan${N}", 220, "Chan ${N}", Yes, 0, "Zero", "One"}
+{0, 3, "xy220:chan${N}", 220, "Chan ${N}", Yes, 0, "Zero", "One"}
+}

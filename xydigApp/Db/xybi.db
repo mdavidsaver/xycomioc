@@ -1,0 +1,11 @@
+
+record(bi, "$(PV)") {
+  field(DTYP, "XVME-$(DTYP)")
+  field(DESC, "$(DESC)")
+  field(SCAN, "$(SCAN)")
+  field(INP , "#C${C} S${N} @" )
+  field(PINI, "$(PINI)")
+  field(VAL , "$(VAL)" )
+  field(ZNAM, "$(ZNAM)")
+  field(ONAM, "$(ONAM)")
+}
