@@ -64,18 +64,18 @@ epicsExportAddress(drvet,drvXy220);
 
 /* Xycom 220 binary output memory structure */
 struct bo_xy220{
-        char    begin_pad[0x80];        /* nothing until 0x80 */
-        short   csr;                    /* control status register */
-        unsigned short low_value;       /* low order 16 bits value */
-        unsigned short high_value;      /* high order 16 bits value */
-        char    end_pad[0x400-0x80-6];  /* pad until next card */
+        epicsUInt8    begin_pad[0x80];        /* nothing until 0x80 */
+        epicsUInt16   csr;                    /* control status register */
+        epicsUInt16   low_value;       /* low order 16 bits value */
+        epicsUInt16   high_value;      /* high order 16 bits value */
+        epicsUInt8    end_pad[0x400-0x80-6];  /* pad until next card */
 };
 
-static unsigned int first_base_addr=0;
+static epicsUInt32 first_base_addr=0;
 
 /* pointers to the binary output cards */
 volatile struct bo_xy220	**pbo_xy220s;	/* Xycom 220s */
-static unsigned int card_count=0;
+static epicsUInt32 card_count=0;
 
 
 /*
@@ -88,7 +88,7 @@ long xy220_driver_init(void)
 {
 	int bomode;
         int status;
-	register short	i;
+	short	i;
 	struct bo_xy220	*pbo_xy220;
 
 	if(card_count==0){
@@ -130,9 +130,9 @@ long xy220_driver_init(void)
  * interface to the xy220 binary outputs
  */
 
-long xy220_driver(unsigned short card, unsigned long *val, unsigned long mask)
+long xy220_driver(unsigned short card, epicsUInt32 *val, epicsUInt32 mask)
 {
-	unsigned long work;
+	epicsUInt32 work;
 
 	/* verify card exists */
 	if (!pbo_xy220s[card])
@@ -158,7 +158,7 @@ return (0);
  * 
  * read the binary output
  */
-long xy220_read(unsigned short card, unsigned long mask, unsigned long *pval)
+long xy220_read(unsigned short card, epicsUInt32 mask, epicsUInt32 *pval)
 {
 
 	/* verify card exists */
@@ -184,7 +184,7 @@ static
 long xy220_io_report(int level)
 {
    int		card;
-   unsigned int	value;
+   epicsUInt32	value;
 
    for (card = 0; card < card_count; card++){
 	if (pbo_xy220s[card]){

@@ -79,7 +79,7 @@ static long read_mbbi(struct mbbiRecord *pmbbi)
 {
 	struct vmeio	*pvmeio;
 	int		status;
-	unsigned long	value;
+	epicsUInt32	value;
 
 	
 	pvmeio = (struct vmeio *)&(pmbbi->inp.value);

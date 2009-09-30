@@ -5,6 +5,8 @@
  * Header file for drvXy210.c
  */
 
-long xy210_driver(unsigned short card, unsigned long mask, unsigned long *prval);
+#include <epicsTypes.h>
+
+long xy210_driver(unsigned short card, epicsUInt32 mask, epicsUInt32 *prval);
 
 #endif /* DRVXY210_H */

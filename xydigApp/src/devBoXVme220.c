@@ -62,7 +62,7 @@ epicsExportAddress(dset,devBoXVme220);
 
 static long init_record(struct boRecord *pbo)
 {
-    unsigned long value;
+    epicsUInt32 value;
     int status=0;
     struct vmeio *pvmeio;
 

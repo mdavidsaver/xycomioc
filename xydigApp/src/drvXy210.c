@@ -65,10 +65,10 @@ static struct {char **sc; char *s;} RCSID = {&RCSID.s,
 /* Xycom 210 binary input memory structure */
 /* Note: the high and low order words are switched from the io card */
 struct bi_xy210{
-        char    begin_pad[0xc0];        /* nothing until 0xc0 */
-        unsigned short  low_value;      /* low order 16 bits value */
-        unsigned short  high_value;     /* high order 16 bits value */
-        char    end_pad[0x400-0xc0-4];  /* pad until next card */
+        epicsUInt8   begin_pad[0xc0];        /* nothing until 0xc0 */
+        epicsUInt16  low_value;      /* low order 16 bits value */
+        epicsUInt16  high_value;     /* high order 16 bits value */
+        epicsUInt8   end_pad[0x400-0xc0-4];  /* pad until next card */
 };
 
 static unsigned int first_base_addr=0;
@@ -126,9 +126,9 @@ long xy210_driver_init(void)
  *
  * interface to the xy210 binary inputs
  */
-long xy210_driver(unsigned short card, unsigned long mask, unsigned long *prval)
+long xy210_driver(unsigned short card, epicsUInt32 mask, epicsUInt32 *prval)
 {
-	unsigned int	work;
+	epicsUInt32	work;
 
                 /* verify card exists */
                 if (!pbi_xy210s[card]){
@@ -150,7 +150,7 @@ static
 long xy210_io_report(int level)
  { 
    int			card;
-   unsigned int 	value;
+   epicsUInt32	 	value;
    
    for (card = 0; card < card_count; card++){
 	 if (pbi_xy210s[card]){

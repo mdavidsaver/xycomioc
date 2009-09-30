@@ -80,7 +80,7 @@ static long read_bi(struct biRecord *pbi)
 {
 	struct vmeio *pvmeio;
 	int	    status;
-	unsigned long value;
+	epicsUInt32 value;
 
 	
 	pvmeio = (struct vmeio *)&(pbi->inp.value);
