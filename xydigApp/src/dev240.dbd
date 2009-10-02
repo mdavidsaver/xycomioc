@@ -1,0 +1,4 @@
+device(bi, VME_IO, devBi240Input, "XYCOM 240")
+device(bo, VME_IO, devBo240Output, "XYCOM 240")
+device(bo, VME_IO, devBo240PortDir, "XYCOM 240 Port Direction")
+registrar(dev240reg)

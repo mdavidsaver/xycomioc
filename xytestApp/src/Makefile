@@ -20,8 +20,9 @@ xytest_DBD += xy210.dbd
 xytest_DBD += xy220.dbd
 xytest_DBD += xy240.dbd
 xytest_DBD += xy566.dbd
+xytest_DBD += xydig.dbd
 
-xytest_LIBS += xycomAnalog xycomDigital
+xytest_LIBS += xycomAnalog xycomDigital xydig
 
 # xytest_registerRecordDeviceDriver.cpp derives from xytest.dbd
 xytest_SRCS += xytest_registerRecordDeviceDriver.cpp
