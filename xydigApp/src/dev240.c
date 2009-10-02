@@ -248,6 +248,8 @@ xycom240setup(int id,int base)
 
   *(card->base+XY240_CSR)=3;
 
+  card->guard=epicsMutexMustCreate();
+
   errlogPrintf("%d mapped %lx as %lx\n",id,(unsigned long)card->base,(unsigned long)card->base);
 
   ellAdd(&xy240s,&card->node);
