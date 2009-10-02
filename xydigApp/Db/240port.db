@@ -21,8 +21,8 @@ record(bo, "$(P)out${N}:dir") {
 
 record(bi, "$(P)in${N}") {
   field( DTYP, "XYCOM 240")
-  field(SCAN, "1 seconds")
-  field(OUT , "#C${C} S${N} @" )
+  field(SCAN, "1 second")
+  field(INP , "#C${C} S${N} @" )
   field(ZNAM, "Zero")
   field(ONAM, "One")
 }
