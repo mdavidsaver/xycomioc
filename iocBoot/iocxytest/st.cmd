@@ -2,11 +2,8 @@
 dbLoadDatabase("dbd/xytest.dbd")
 xytest_registerRecordDeviceDriver(pdbbase)
 
-xy220setup(1,0x4000)
+xycom240setup(1,0xe000)
 
-xy240setup(1,0x6000)
-
-dbLoadTemplate("db/xy220.substitutions")
-dbLoadTemplate("db/xy240.substitutions")
+dbLoadRecords("db/240port.db","P=,C=1,N=0")
 
 iocInit()
