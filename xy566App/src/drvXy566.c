@@ -494,7 +494,7 @@ static long ai_xy566l_init(
    	return 1;
     }
 
-#ifdef VXWORKS
+#ifdef __VXWORKS__
     rebootHookAdd(xy566_reset);
 #endif
 
