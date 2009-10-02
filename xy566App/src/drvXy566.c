@@ -77,6 +77,7 @@
 #include <epicsExport.h>
 #include <epicsThread.h>
 #include <devLib.h>
+#include <iocsh.h>
 
 #include "drvXy566.h"
 
@@ -1124,6 +1125,22 @@ int xy566SEConfig(unsigned int ncards, unsigned int nchannels,
     return 0;
 }
 
+/* xy566SEConfig */
+static const iocshArg xy566SEConfigArg0 = { "Number of cards",iocshArgInt};
+static const iocshArg xy566SEConfigArg1 = { "Number of channels",iocshArgInt};
+static const iocshArg xy566SEConfigArg2 = { "Base address of first card control registers",iocshArgInt};
+static const iocshArg xy566SEConfigArg3 = { "Base address of first card data memory",iocshArgInt};
+static const iocshArg * const xy566SEConfigArgs[4] =
+{
+    &xy566SEConfigArg0,&xy566SEConfigArg1,&xy566SEConfigArg2,&xy566SEConfigArg3
+};
+static const iocshFuncDef xy566SEConfigFuncDef =
+    {"xy566SEConfig",4,xy566SEConfigArgs};
+static void xy566SEConfigCallFunc(const iocshArgBuf *args)
+{
+    xy566SEConfig(args[0].ival,args[1].ival,args[2].ival,args[3].ival);
+}
+
 int xy566DIConfig(unsigned int ncards, unsigned int nchannels,
     unsigned int base, unsigned int memory)
 {
@@ -1134,6 +1151,22 @@ int xy566DIConfig(unsigned int ncards, unsigned int nchannels,
     return 0;
 }
 
+/* xy566DIConfig */
+static const iocshArg xy566DIConfigArg0 = { "Number of cards",iocshArgInt};
+static const iocshArg xy566DIConfigArg1 = { "Number of channels",iocshArgInt};
+static const iocshArg xy566DIConfigArg2 = { "Base address of first card control registers",iocshArgInt};
+static const iocshArg xy566DIConfigArg3 = { "Base address of first card data memory",iocshArgInt};
+static const iocshArg * const xy566DIConfigArgs[4] =
+{
+    &xy566DIConfigArg0,&xy566DIConfigArg1,&xy566DIConfigArg2,&xy566DIConfigArg3
+};
+static const iocshFuncDef xy566DIConfigFuncDef =
+    {"xy566DIConfig",4,xy566DIConfigArgs};
+static void xy566DIConfigCallFunc(const iocshArgBuf *args)
+{
+    xy566DIConfig(args[0].ival,args[1].ival,args[2].ival,args[3].ival);
+}
+
 int xy566DILConfig(unsigned int ncards, unsigned int nchannels,
     unsigned int base, unsigned int memory)
 {
@@ -1142,6 +1175,22 @@ int xy566DILConfig(unsigned int ncards, unsigned int nchannels,
     ai_addrs[XY566DIL] = base;
     ai_memaddrs[XY566DIL] = memory;
     return 0;
+}
+
+/* xy566DILConfig */
+static const iocshArg xy566DILConfigArg0 = { "Number of cards",iocshArgInt};
+static const iocshArg xy566DILConfigArg1 = { "Number of channels",iocshArgInt};
+static const iocshArg xy566DILConfigArg2 = { "Base address of first card control registers",iocshArgInt};
+static const iocshArg xy566DILConfigArg3 = { "Base address of first card data memory",iocshArgInt};
+static const iocshArg * const xy566DILConfigArgs[4] =
+{
+    &xy566DILConfigArg0,&xy566DILConfigArg1,&xy566DILConfigArg2,&xy566DILConfigArg3
+};
+static const iocshFuncDef xy566DILConfigFuncDef =
+    {"xy566DILConfig",4,xy566DILConfigArgs};
+static void xy566DILConfigCallFunc(const iocshArgBuf *args)
+{
+    xy566DILConfig(args[0].ival,args[1].ival,args[2].ival,args[3].ival);
 }
 
 int xy566WFConfig(unsigned int ncards, unsigned int nchannels,
@@ -1156,4 +1205,30 @@ int xy566WFConfig(unsigned int ncards, unsigned int nchannels,
     AI566_VNUM = vector;
     return 0;
 }
+
+/* xy566WFConfig */
+static const iocshArg xy566WFConfigArg0 = { "Number of cards",iocshArgInt};
+static const iocshArg xy566WFConfigArg1 = { "Number of channels",iocshArgInt};
+static const iocshArg xy566WFConfigArg2 = { "Base address of first card control registers",iocshArgInt};
+static const iocshArg xy566WFConfigArg3 = { "Base address of first card data memory",iocshArgInt};
+static const iocshArg * const xy566WFConfigArgs[4] =
+{
+    &xy566WFConfigArg0,&xy566WFConfigArg1
+};
+static const iocshFuncDef xy566WFConfigFuncDef =
+    {"xy566WFConfig",4,xy566WFConfigArgs};
+static void xy566WFConfigCallFunc(const iocshArgBuf *args)
+{
+    xy566WFConfig(args[0].ival,args[1].ival,args[2].ival,args[3].ival);
+}
+
+static
+void xy566Register(void)
+{
+  iocshRegister(&xy566SEConfigFuncDef,xy566SEConfigCallFunc);
+  iocshRegister(&xy566DIConfigFuncDef,xy566DIConfigCallFunc);
+  iocshRegister(&xy566DILConfigFuncDef,xy566DILConfigCallFunc);
+  iocshRegister(&xy566WFConfigFuncDef,xy566WFConfigCallFunc);
+}
+epicsExportRegistrar(xy566Register);
 
