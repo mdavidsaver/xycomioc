@@ -196,7 +196,6 @@ long xy220_io_report(int level)
    return (0);
  }
 
-static
 void xy220setup(int cards, int start_addr)
 {
   card_count=cards;

@@ -416,7 +416,6 @@ long xy240_io_report(int level)
         return(0); 
 }
 
-static
 void xy240setup(int cards, int start_addr)
 {
   card_count=cards;

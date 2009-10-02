@@ -162,7 +162,6 @@ long xy210_io_report(int level)
    return (0);
 }
 
-static
 void xy210setup(int cards, int start_addr)
 {
   card_count=cards;
