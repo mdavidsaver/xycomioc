@@ -1211,15 +1211,19 @@ static const iocshArg xy566WFConfigArg0 = { "Number of cards",iocshArgInt};
 static const iocshArg xy566WFConfigArg1 = { "Number of channels",iocshArgInt};
 static const iocshArg xy566WFConfigArg2 = { "Base address of first card control registers",iocshArgInt};
 static const iocshArg xy566WFConfigArg3 = { "Base address of first card data memory",iocshArgInt};
-static const iocshArg * const xy566WFConfigArgs[4] =
+static const iocshArg xy566WFConfigArg4 = { "Base address of trigger card control registers",iocshArgInt};
+static const iocshArg xy566WFConfigArg5 = { "Interrupt vector of the first card",iocshArgInt};
+static const iocshArg * const xy566WFConfigArgs[6] =
 {
-    &xy566WFConfigArg0,&xy566WFConfigArg1
+    &xy566WFConfigArg0,&xy566WFConfigArg1,&xy566WFConfigArg2,&xy566WFConfigArg3,&xy566WFConfigArg4,&xy566WFConfigArg5
 };
 static const iocshFuncDef xy566WFConfigFuncDef =
-    {"xy566WFConfig",4,xy566WFConfigArgs};
+    {"xy566WFConfig",6,xy566WFConfigArgs};
 static void xy566WFConfigCallFunc(const iocshArgBuf *args)
 {
-    xy566WFConfig(args[0].ival,args[1].ival,args[2].ival,args[3].ival);
+    xy566WFConfig(args[0].ival,args[1].ival,
+	args[2].ival,args[3].ival,
+	args[4].ival,args[5].ival);
 }
 
 static
