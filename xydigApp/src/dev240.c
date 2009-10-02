@@ -126,10 +126,14 @@ long write_output(boRecord* prec)
 
   val=*(priv->base+XY240_PORT(port));
 
+  errlogPrintf("%lx read %02x\n",(unsigned long)prec,val);
+
   if(prec->rval)
     val|=mask;
   else
     val&=~mask;
+
+  errlogPrintf("%lx write %02x\n",(unsigned long)prec,val);
 
   *(priv->base+XY240_PORT(port))=val;
 
@@ -156,10 +160,14 @@ long write_portdir(boRecord* prec)
 
   val=*(priv->base+XY240_DIR);
 
+  errlogPrintf("%lx dir read %02x\n",(unsigned long)prec,val);
+
   if(prec->rval)
     val|=mask;
   else
     val&=~mask;
+
+  errlogPrintf("%lx dir write %02x\n",(unsigned long)prec,val);
 
   *(priv->base+XY240_DIR)=val;
 
@@ -239,6 +247,8 @@ xycom240setup(int id,int base)
   }
 
   *(card->base+XY240_CSR)=3;
+
+  errlogPrintf("%d mapped %lx as %lx\n",id,(unsigned long)card->base,(unsigned long)card->base);
 
   ellAdd(&xy240s,&card->node);
   return;
