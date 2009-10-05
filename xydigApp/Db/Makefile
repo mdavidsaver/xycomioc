@@ -11,6 +11,7 @@ include $(TOP)/configure/CONFIG
 # Create and install (or just install) into <top>/db
 # databases, templates, substitutions like this
 DB += xy240.db
+DB += xy220.db
 
 #----------------------------------------------------
 # If <anyname>.db template is not named <anyname>*.template add
@@ -20,8 +21,8 @@ include $(TOP)/configure/RULES
 #----------------------------------------
 #  ADD RULES AFTER THIS LINE
 
-../xy240.mac : ../240bit.db.part ../240port.db.part
+../xy240.mac : ../240port.db.part ../xybo.db.part ../xybi.db.part
 
 ../O.Common/%.db: ../%.mac
-	$(TOP)/dbpp.py $^ > $@.tmp
+	$(TOP)/dbpp.py $< > $@.tmp
 	mv $@.tmp $@

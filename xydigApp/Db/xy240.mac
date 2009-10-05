@@ -8,21 +8,24 @@
 # Ports
 
 FILE "../240port.db.part"
-N low high
-0 0   7
-1 8   15
-2 16  23
-3 24  31
-4 32  39
-5 40  47
-6 48  55
-7 56  63
+N, low, high
+0, 0,   7
+1, 8,   15
+2, 16,  23
+3, 24,  31
+4, 32,  39
+5, 40,  47
+6, 48,  55
+7, 56,  63
 
 CLOSE
 
 # Bits
 
-FILE "../240bit.db.part"
+FILE "../xybo.db.part"
+FILE "../xybi.db.part"
+
+DTYP = "XYCOM 240"
 
 N
 0

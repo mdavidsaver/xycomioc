@@ -25,6 +25,11 @@
 # A column can be defined in terms of columns to its left.
 # For example, for columns 'A' 'B' all values in column 'A'
 # must be constants, but 'str%(A)s' is valid in column 'B'.
+# Lines of the form 'token = "value"' set global tokens
+# which may be used thereafter as if they were defined as
+# part of a table.
+#
+# Input files
 #
 # There is no restriction on input files other then that
 # all occurances of '%' be part of a valid python string
@@ -34,6 +39,7 @@
 #
 
 import sys, re
+from copy import deepcopy
 
 if len(sys.argv)<2:
   print "Usage: dbpp.py <source file>"
@@ -45,12 +51,17 @@ ifile=re.compile('\W*FILE\W*\"([^\"]*)\"')
 stop=re.compile('\W*CLOSE\W*$')
 pstop=re.compile('\W*CLOSE\W*\"([^\"]*)\"')
 
+svar=re.compile('([a-zA-Z][a-zA-Z0-9]*)\W*=\W*\"([^\"]*)')
+rvar=re.compile('\W*UNSET\W*([a-zA-Z][a-zA-Z0-9]*)')
+
 # open template table file
 f=open(sys.argv[1],'r')
 
 tokens=None
 line=0
 inpf={}
+
+globs={}
 
 try:
   for l in f.readlines():
@@ -61,6 +72,18 @@ try:
 
     elif comment.match(l):
       print l,
+      continue
+
+    svm=svar.match(l)
+    if svm is not None:
+      name, val = svm.groups()
+      globs[name]=val%globs
+      continue
+
+    rvm=rvar.match(l)
+    if rvm is not None:
+      name = svm.groups()
+      del globs[name]
       continue
 
     fm=ifile.match(l)
@@ -95,7 +118,10 @@ try:
       inpf={}
       continue
 
-    vals=l.split()
+    vals=l.split(',')
+    # remove leading/trailing whitespace
+    for n in range(len(vals)):
+      vals[n]=vals[n].strip()
 
     if tokens is None:
       tokens=vals
@@ -106,7 +132,7 @@ try:
         {'line':line,'file':sys.argv[1],'vals':len(vals),'toks':len(tokens)}
       sys.exit(1)
 
-    macs={}
+    macs=deepcopy(globs)
     for n in range(len(tokens)):
       macs[tokens[n]]=vals[n]%macs
 
