@@ -48,7 +48,7 @@ long init_rec(dbCommon* prec, DBLINK* lnk)
   }
 
   if(!priv){
-    errMessage(errlogFatal,"card# not asociated with a device");
+    errMessage(errlogFatal,"card# not associated with a device");
     return S_dev_noDevice;
   }
 
