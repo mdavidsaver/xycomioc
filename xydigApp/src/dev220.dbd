@@ -1,0 +1,3 @@
+device(bo, VME_IO, devBo220Output, "XYCOM 220")
+registrar(dev220reg)
+variable(dbg220,int)

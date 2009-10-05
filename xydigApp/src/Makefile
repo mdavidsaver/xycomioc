@@ -13,10 +13,12 @@ DBD += xydig.dbd
 
 xydig_DBD += base.dbd
 xydig_DBD += dev240.dbd
+xydig_DBD += dev220.dbd
 
 # xydig_registerRecordDeviceDriver.cpp derives from xydig.dbd
 xydig_SRCS += xydig_registerRecordDeviceDriver.cpp
 xydig_SRCS += dev240.c
+xydig_SRCS += dev220.c
 
 # Build the main IOC entry point on workstation OSs.
 xydig_SRCS_DEFAULT += xydigMain.cpp
