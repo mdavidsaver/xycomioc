@@ -1,0 +1,11 @@
+
+record(bo, "$(P)port%(N)s") {
+  field(DTYP, "XYCOM 240 Port Direction")
+  field(DESC, "Direction Port %(N)s for bits %(low)s to %(high)s of card ${C}")
+  field(SCAN, "Passive")
+  field(OUT , "#C${C} S%(N)s @" )
+  field(PINI, "YES")
+  field(VAL , 1 )
+  field(ZNAM, "Input")
+  field(ONAM, "Output")
+}
