@@ -246,7 +246,7 @@ xycom240setup(int id,int base)
     return;
   }
 
-  *(card->base+XY240_CSR)=3;
+  *(card->base+XY240_CSR)=X240_CSR_RED|X240_CSR_GRN;
 
   card->guard=epicsMutexMustCreate();
 

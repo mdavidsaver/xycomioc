@@ -7,6 +7,11 @@
 #  define	XY240_ID_CNT	6
 #define XY240_IRQ_INP	0x80
 #define XY240_CSR	0x81
+#  define X240_CSR_RED 0x01 /* 0=on 1=off */
+#  define X240_CSR_GRN 0x02 /* 0=of 1=on */
+#  define X240_CSR_PND 0x04 /* IRQ pending */
+#  define X240_CSR_ENA 0x08 /* enable IRQ */
+#  define X240_CSR_RST 0x10 /* Reset */
 #define XY240_IRQ_PEND	0x82
 #define XY240_IRQ_MASK	0x83
 #define XY240_IRQ_CLR	0x84
