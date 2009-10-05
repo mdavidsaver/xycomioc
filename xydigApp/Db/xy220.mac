@@ -5,7 +5,7 @@ FILE "../xybo.db.part"
 
 DTYP = "XYCOM 220"
 
-N
+TOKENS N
 0
 1
 2

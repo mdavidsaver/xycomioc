@@ -8,7 +8,7 @@
 # Ports
 
 FILE "../240port.db.part"
-N, low, high
+TOKENS N, low, high
 0, 0,   7
 1, 8,   15
 2, 16,  23
@@ -27,7 +27,7 @@ FILE "../xybi.db.part"
 
 DTYP = "XYCOM 240"
 
-N
+TOKENS N
 0
 1
 2

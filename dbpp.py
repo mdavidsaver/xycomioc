@@ -45,12 +45,23 @@ if len(sys.argv)<2:
   print "Usage: dbpp.py <source file>"
   sys.exit(1)
 
+def cleansep(inp):
+  """Seperate a line of tokens or values
+  and clean the individual values
+  """
+  x=inp.split(',')
+  for n in range(len(x)):
+    x[n]=x[n].strip()
+  return x
+
 comment=re.compile('^\W*#\W*')
 empty=re.compile('^\W*$')
+
 ifile=re.compile('\W*FILE\W*\"([^\"]*)\"')
 stop=re.compile('\W*CLOSE\W*$')
 pstop=re.compile('\W*CLOSE\W*\"([^\"]*)\"')
 
+tokl=re.compile('\W*TOKENS\W*(.*)')
 svar=re.compile('([a-zA-Z][a-zA-Z0-9]*)\W*=\W*\"([^\"]*)')
 rvar=re.compile('\W*UNSET\W*([a-zA-Z][a-zA-Z0-9]*)')
 
@@ -65,6 +76,8 @@ globs={}
 
 try:
   for l in f.readlines():
+    #TODO: handle continuations '\$'
+
     line=line+1
 
     if empty.match(l):
@@ -106,7 +119,7 @@ try:
 
     pm=pstop.match(l)
     if pm is not None:
-      sfile=fm.groups()[0]
+      sfile=fm.groups()
       if sfile not in inpf:
         print >>sys.stderr, 'On line %(line)d of %(file)s: %(ifile)s is not open'% \
           {'line':line,'file':sys.argv[1],'ifile':sfile}
@@ -118,14 +131,18 @@ try:
       inpf={}
       continue
 
-    vals=l.split(',')
-    # remove leading/trailing whitespace
-    for n in range(len(vals)):
-      vals[n]=vals[n].strip()
-
-    if tokens is None:
-      tokens=vals
+    ptm=tokl.match(l)
+    if ptm is not None:
+      tokens=cleansep(ptm.groups()[0])
       continue
+
+    # Must be a values line
+    if tokens is None:
+      print >>sys.stderr, 'On line %(line)d of %(file)s: expected TOKENS'% \
+        {'line':line,'file':sys.argv[1]}
+      sys.exit(1)
+
+    vals=cleansep(l)
 
     if len(tokens) != len(vals):
       print >>sys.stderr, 'On line %(line)d of %(file)s: the number of values (%(vals)d) does not match the number of tokens (%(toks)d)'% \
