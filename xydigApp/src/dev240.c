@@ -33,6 +33,9 @@ static ELLLIST xy240s={{NULL,NULL},0};
 
 #define node2priv(n) ( (xy240*)(n) )
 
+int dbg240=0;
+epicsExportAddress(int,dbg240);
+
 static
 long init_rec(dbCommon* prec, DBLINK* lnk)
 {
@@ -98,6 +101,9 @@ long read_input(biRecord* prec)
 
   val=*(priv->base+XY240_PORT(port));
 
+  if(dbg240>1)
+    errlogPrintf("%lx read %02x ",(unsigned long)prec,val);
+
   epicsMutexUnlock(priv->guard);
 
   val&=mask;
@@ -126,14 +132,16 @@ long write_output(boRecord* prec)
 
   val=*(priv->base+XY240_PORT(port));
 
-  errlogPrintf("%lx read %02x\n",(unsigned long)prec,val);
+  if(dbg240>0)
+    errlogPrintf("%lx read %02x ",(unsigned long)prec,val);
 
   if(prec->rval)
     val|=mask;
   else
     val&=~mask;
 
-  errlogPrintf("%lx write %02x\n",(unsigned long)prec,val);
+  if(dbg240>0)
+    errlogPrintf("write %02x\n",val);
 
   *(priv->base+XY240_PORT(port))=val;
 
@@ -160,14 +168,16 @@ long write_portdir(boRecord* prec)
 
   val=*(priv->base+XY240_DIR);
 
-  errlogPrintf("%lx dir read %02x\n",(unsigned long)prec,val);
+  if(dbg240>0)
+    errlogPrintf("%lx dir read %02x ",(unsigned long)prec,val);
 
   if(prec->rval)
     val|=mask;
   else
     val&=~mask;
 
-  errlogPrintf("%lx dir write %02x\n",(unsigned long)prec,val);
+  if(dbg240>0)
+    errlogPrintf("write %02x\n",val);
 
   *(priv->base+XY240_DIR)=val;
 
@@ -250,7 +260,8 @@ xycom240setup(int id,int base)
 
   card->guard=epicsMutexMustCreate();
 
-  errlogPrintf("%d mapped %lx as %lx\n",id,(unsigned long)card->base,(unsigned long)card->base);
+  if(dbg240>0)
+    errlogPrintf("%d mapped %lx as %lx\n",id,(unsigned long)card->base,(unsigned long)card->base);
 
   ellAdd(&xy240s,&card->node);
   return;
