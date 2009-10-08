@@ -15,6 +15,7 @@ DBD += xy566Support.dbd
 xy566_SRCS += drv566.c
 xy566_SRCS += stc566.c
 xy566_SRCS += seq566.c
+xy566_SRCS += devbi566.c
 xy566_SRCS += iocsh566.c
 
 xy566_LIBS += Com
