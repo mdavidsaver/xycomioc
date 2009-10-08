@@ -138,6 +138,13 @@ xycom566_init(void)
     card=node2priv(node);
     epicsUInt16 csr;
 
+    if(!card->fail){
+      if(!!finish566seq(card)){
+        errlogPrintf("Board #%d failed to generate samping sequence and will not be used\n",card->id);
+        card->fail=1;
+      }
+    }
+
     if(card->fail)
       errlogPrintf("Board #%d failed to initialize and will not be used\n",card->id);
 

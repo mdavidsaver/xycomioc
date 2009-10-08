@@ -1,3 +1,4 @@
 driver(drvXycom566)
 registrar(drv566Register)
-registrar(stc566simple)
+registrar(stc566Register)
+registrar(seq566Register)

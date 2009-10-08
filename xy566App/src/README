@@ -1,0 +1,12 @@
+
+XYCOM 566 fast analog input card.
+
+The 566 is a 32 (unipolar) or 16 (bipolar) channel AI
+card.  It has a single adc with a programmable multiplexer
+to control the sampling of all channels.  The user also
+has full control of the integrated AM5913 timing chip
+which is used to generate the sampling clock.
+
+While the 566 has several operating modes, this
+driver uses only sequence mode.  This is the most
+flexible mode.
