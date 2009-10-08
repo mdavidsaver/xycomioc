@@ -49,12 +49,6 @@ typedef struct {
 #define entFirst(list) node2seqent(ellFirst(list))
 #define entNext(ent) node2seqent(ellNext(&(ent)->node))
 
-
-/* Special bits in sequence ram */
-#define SEQ_IRQ (1<<5)
-#define SEQ_STP (1<<6)
-#define SEQ_END (1<<7)
-
 void
 seq566set(int id, int ch, int nsamp, int ord, int prio)
 {
@@ -234,6 +228,19 @@ int finish566seq(xy566* card)
   }
 
   card->seq[seqpos-1]|=SEQ_END|SEQ_IRQ;
+
+  /* allocate final data buffers */
+  for(bfirst=entFirst(&card->seq_ctor), i=0;
+      bfirst;
+      bfirst=entNext(bfirst), i++
+  ){
+    card->dlen[i]=bfirst->nsamples;
+    card->data[i]=calloc(bfirst->nsamples,sizeof(epicsUInt16));
+    if(!card->data[i]){
+      errlogPrintf("Out of memory!!!\n");
+      return 1;
+    }
+  }
 
   if(dbg566>0){
     errlogPrintf("Sequence for card %d\n",card->id);

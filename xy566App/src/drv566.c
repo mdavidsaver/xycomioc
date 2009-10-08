@@ -116,13 +116,22 @@ xycom566setup(
   WRITE16(card->base+XY566_RAM, 0);
   WRITE16(card->base+XY566_SEQ, 0);
 
+  card->guard=epicsMutexMustCreate();
+  scanIoInit(&card->seq_irq);
+
   WRITE16(card->base+XY566_VEC, vec);
 
   devEnableInterruptLevelVME(level);
   devConnectInterruptVME(vec, xycom566isr, card);
 
-  card->guard=epicsMutexMustCreate();
-  scanIoInit(&card->seq_irq);
+  /* Configure card
+   * Mode: continuous sequence (default)
+   * enable sequence interrupt only
+   * 16 bit conversion (default)
+   * sequence controller disable (will be enabled during drvsup init)
+   */
+  WRITE16(card->base+XY566_CSR,
+    XY566_CSR_GRN|XY566_CSR_INA);
 
   ellAdd(&xy566s,&card->node);
 }
@@ -190,10 +199,12 @@ void xycom566isr(void *arg)
 {
   xy566 *card=arg;
   epicsUInt16 csr=READ16(card->base+XY566_CSR);
+  epicsUInt16 datacnt[32];
+  epicsUInt16 dcnt;
+  size_t i, ch;
 
   if(!(csr&XY566_CSR_PND))
     return; /* not ours */
-
 
   epicsMutexMustLock(card->guard);
 
@@ -201,11 +212,42 @@ void xycom566isr(void *arg)
 
   /* disable sequence controller */
   csr&=~XY566_CSR_SEQ;
-  WRITE16(card->base+XY566_CSR, csr);
+
+  /* and acknowledge interrupts */
+  WRITE16(card->base+XY566_CSR,
+    csr|XY566_CSR_SIP|XY566_CSR_TIP|XY566_CSR_EIP);
 
   if(csr&XY566_CSR_SIP){
 
-  }
+    memset(datacnt,0,sizeof(datacnt));
+
+    /* number of samples taken */
+    dcnt=READ16(card->base+XY566_RAM);
+
+    if(dcnt>256){
+      /* Somehow the sequence was restart resetting the pointer
+       * or changed by an outside program
+       */
+      dcnt=256;
+      errlogPrintf("Data longer then expected\n");
+    }
+
+    for(i=0;i<dcnt;i++){
+      ch=card->seq[i]&0x1f;
+
+      card->data[ch][datacnt[ch]]=READ16(card->data_base+2*i);
+      datacnt[ch]++;
+
+      if( card->seq[i]&SEQ_END )
+        break;
+    }
+  } /* if(csr&XY566_CSR_SIP) */
+
+  csr=READ16(card->base+XY566_CSR);
+
+  /* enable sequence controller */
+  csr|=XY566_CSR_SEQ;
+  WRITE16(card->base+XY566_CSR, csr);
 
   epicsMutexUnlock(card->guard);
 }

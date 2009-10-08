@@ -33,6 +33,12 @@
 #define XY566_GRB 0x101 /* Gain RAM base */
 #define XY566_SRB 0x201 /* Seqence ram base */
 
+
+/* Special bits in sequence ram */
+#define SEQ_IRQ (1<<5)
+#define SEQ_STP (1<<6)
+#define SEQ_END (1<<7)
+
 /* per device struct */
 typedef struct {
   ELLNODE node; /* must be first */

@@ -8,5 +8,5 @@ has full control of the integrated AM5913 timing chip
 which is used to generate the sampling clock.
 
 While the 566 has several operating modes, this
-driver uses only sequence mode.  This is the most
+driver uses only continuous sequence mode.  This is the most
 flexible mode.
