@@ -16,13 +16,10 @@ DBD += xytest.dbd
 
 # xytest.dbd will be made up from these files:
 xytest_DBD += base.dbd
-xytest_DBD += xy210.dbd
-xytest_DBD += xy220.dbd
-xytest_DBD += xy240.dbd
-xytest_DBD += xy566.dbd
+xytest_DBD += xy566Support.dbd
 xytest_DBD += xydig.dbd
 
-xytest_LIBS += xycomAnalog xycomDigital xydig
+xytest_LIBS += xy566 xydig
 
 # xytest_registerRecordDeviceDriver.cpp derives from xytest.dbd
 xytest_SRCS += xytest_registerRecordDeviceDriver.cpp
