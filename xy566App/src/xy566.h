@@ -90,6 +90,8 @@ xy566* get566(short id);
 
 int finish566seq(xy566*);
 
+extern int dbg566;
+
 #define WRITE16(addr, val) ( *(volatile epicsUInt16*)(addr) = (val) )
 #define WRITE8(addr, val) ( *(volatile epicsUInt8*)(addr) = (val) )
 

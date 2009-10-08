@@ -17,6 +17,9 @@
 
 #include "xy566.h"
 
+int dbg566=0;
+epicsExportAddress(int,dbg566);
+
 static ELLLIST xy566s={{NULL,NULL},0};
 
 static

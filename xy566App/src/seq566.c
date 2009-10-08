@@ -99,6 +99,9 @@ seq566set(int id, int ch, int nsamp, int ord, int prio)
     return;
   }
 
+  /* find location for insertion which maintains
+   * sorted order
+   */
   for(node=ellFirst(&card->seq_ctor), prev=NULL;
       node;
       prev=node, node=ellNext(node)
@@ -156,6 +159,20 @@ int finish566seq(xy566* card)
   if(!ellFirst(&card->seq_ctor)){
     errlogPrintf("Card %d has no channel definitions\n",card->id);
     return 1;
+  }
+
+  if(dbg566>1){
+    errlogPrintf("Sequence Source for card %d\n",card->id);
+    for(bfirst=entFirst(&card->seq_ctor);
+        bfirst;
+        bfirst=entNext(bfirst)
+    ){
+      errlogPrintf("Ch %u (%u) %u:%u\n",
+        bfirst->channel,bfirst->nsamples,
+        bfirst->order,bfirst->priority
+      );
+    }
+    bfirst=NULL;
   }
 
   /* The sequence is constructed block by block
@@ -217,6 +234,31 @@ int finish566seq(xy566* card)
   }
 
   card->seq[seqpos-1]|=SEQ_END|SEQ_IRQ;
+
+  if(dbg566>0){
+    errlogPrintf("Sequence for card %d\n",card->id);
+    for(i=0;i<sizeof(card->seq);i++){
+      if(i%16==0)
+        errlogPrintf("%02x: ",i);
+      errlogPrintf("%02x",card->seq[i]);
+      if(i%16==15)
+        errlogPrintf("\n");
+      else if(i%4==3)
+        errlogPrintf(" ");
+    }
+  }
+
+  /* Now clean up things which don't need to persist when running */
+
+  bfirst=entFirst(&card->seq_ctor);
+  while(bfirst){
+    blast=entNext(bfirst);
+
+    ellDelete(&card->seq_ctor, &bfirst->node);
+    free(bfirst);
+
+    bfirst=blast;
+  }
 
   return 0;
 }
