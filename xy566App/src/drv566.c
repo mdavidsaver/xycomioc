@@ -73,7 +73,7 @@ xycom566setup(
   card->clk_div=0; /* stc uninitialized */
   ellInit(&card->seq_ctor);
 
-  if(!!bipol)
+  if(!bipol)
     card->nchan=32;
   else
     card->nchan=16;
