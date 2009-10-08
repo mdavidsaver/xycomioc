@@ -1,5 +1,3 @@
 driver(drvXycom566)
-registrar(drv566Register)
-registrar(stc566Register)
-registrar(seq566Register)
+registrar(register566)
 variable(dbg566,int)

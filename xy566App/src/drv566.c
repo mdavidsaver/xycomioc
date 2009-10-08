@@ -70,7 +70,6 @@ xycom566setup(
   }
 
   card->fail=0;
-  card->stop_on_seq_done=0;
   card->clk_div=0; /* stc uninitialized */
   ellInit(&card->seq_ctor);
 
@@ -201,8 +200,12 @@ void xycom566isr(void *arg)
   csr=READ16(card->base+XY566_CSR);
 
   /* disable sequence controller */
-  if( card->stop_on_seq_done )
-    csr&=~XY566_CSR_SEQ;
+  csr&=~XY566_CSR_SEQ;
+  WRITE16(card->base+XY566_CSR, csr);
+
+  if(csr&XY566_CSR_SIP){
+
+  }
 
   epicsMutexUnlock(card->guard);
 }
@@ -211,33 +214,3 @@ void xycom566isr(void *arg)
 
 drvet drvXycom566 = {2, NULL, xycom566_init};
 epicsExportAddress(drvet,drvXycom566);
-
-
-/********************** IOCSH *************************/
-
-/* xycom566setup */
-static const iocshArg xycom566setupArg0 = { "Card id #",iocshArgInt};
-static const iocshArg xycom566setupArg1 = { "Config (A16) base",iocshArgInt};
-static const iocshArg xycom566setupArg2 = { "Data (A24) base",iocshArgInt};
-static const iocshArg xycom566setupArg3 = { "IRQ Level",iocshArgInt};
-static const iocshArg xycom566setupArg4 = { "IRQ Vector",iocshArgInt};
-static const iocshArg xycom566setupArg5 = { "0 - 16 chan, 1 - 32 chan",iocshArgInt};
-static const iocshArg * const xycom566setupArgs[6] =
-{
-    &xycom566setupArg0,&xycom566setupArg1,&xycom566setupArg2,
-    &xycom566setupArg3,&xycom566setupArg4,&xycom566setupArg5
-};
-static const iocshFuncDef xycom566setupFuncDef =
-    {"xycom566setup",6,xycom566setupArgs};
-static void xycom566setupCallFunc(const iocshArgBuf *args)
-{
-    xycom566setup(args[0].ival,args[1].ival,args[2].ival,
-                  args[3].ival,args[4].ival,args[5].ival);
-}
-
-static
-void drv566Register(void)
-{
-  iocshRegister(&xycom566setupFuncDef,xycom566setupCallFunc);
-}
-epicsExportRegistrar(drv566Register);

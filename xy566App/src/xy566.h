@@ -44,11 +44,6 @@ typedef struct {
    */
   int fail:1;
 
-  /* request ISR to disable when a sequence
-   * done interrupt occurs.
-   */
-  int stop_on_seq_done:1;
-
   /* divider for counter clock.
    * All times are a multiple of .25us times this value.
    */
@@ -90,12 +85,30 @@ xy566* get566(short id);
 
 int finish566seq(xy566*);
 
-extern int dbg566;
-
 #define WRITE16(addr, val) ( *(volatile epicsUInt16*)(addr) = (val) )
 #define WRITE8(addr, val) ( *(volatile epicsUInt8*)(addr) = (val) )
 
 #define READ16(addr) ( *(volatile epicsUInt16*)(addr) )
 #define READ8(addr) ( *(volatile epicsUInt8*)(addr) )
+
+/* IOCSH stuff */
+
+extern int dbg566;
+
+void
+xycom566setup(
+      int id,
+      int cbase,
+      int dbase,
+      int level,
+      int vec,
+      int bipol
+);
+
+void
+stc566simple(int id, int div, int period);
+
+void
+seq566set(int id, int ch, int nsamp, int ord, int prio);
 
 #endif /* XY566_H_INC */

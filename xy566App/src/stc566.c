@@ -229,27 +229,3 @@ stc566simple(int id, int div, int period)
 
   epicsMutexUnlock(card->guard);
 }
-
-/********************** IOCSH *************************/
-
-/* stc566simple */
-static const iocshArg stc566simpleArg0 = { "Card id #",iocshArgInt};
-static const iocshArg stc566simpleArg1 = { "STC clock divider (1->16)",iocshArgInt};
-static const iocshArg stc566simpleArg2 = { "Sample period in multiples of 0.25us * div (1->0xffff)",iocshArgInt};
-static const iocshArg * const stc566simpleArgs[3] =
-{
-    &stc566simpleArg0,&stc566simpleArg1,&stc566simpleArg2
-};
-static const iocshFuncDef stc566simpleFuncDef =
-    {"stc566simple",3,stc566simpleArgs};
-static void stc566simpleCallFunc(const iocshArgBuf *args)
-{
-    stc566simple(args[0].ival,args[1].ival,args[2].ival);
-}
-
-static
-void stc566Register(void)
-{
-  iocshRegister(&stc566simpleFuncDef,stc566simpleCallFunc);
-}
-epicsExportRegistrar(stc566Register);
