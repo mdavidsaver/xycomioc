@@ -2,14 +2,14 @@
 # -*- coding: utf-8 -*-
 
 #
-# dbpp.py is conceptually similar the usual msi utility with
+# dbpp.py is conceptually similar to the usual msi utility with
 # several key differences.
 #
 # It uses the python string formatting syntax '%(macros)s'
 # instead of the shell syntax '${macro}' and '$(macro)'.
-# While it does not support all features of msi it can be
-# invoked recursively since a '%%' in the input will be
-# translated to '%' in the output.
+# This allows the output to be used with dbLoadRecords('','')
+# It can even be invoked recursively since a '%%' in the
+# input will be translated to '%' in the output.
 #
 # Template table file formatting
 #
@@ -72,6 +72,11 @@ tokens=None
 line=0
 inpf={}
 
+def filerr(mesg):
+  print >>sys.stderr, 'On line %(line)d of %(file)s: %(mesg)s'% \
+    {'line':line,'file':sys.argv[1],'mesg':mesg}
+  sys.exit(1)
+
 globs={}
 
 try:
@@ -104,26 +109,22 @@ try:
       infile=fm.groups()[0]
       xf=open(infile,'r')
       if infile in inpf:
-        print >>sys.stderr, 'On line %(line)d of %(file)s: %(ifile)s is already open'% \
-          {'line':line,'file':sys.argv[1],'ifile':infile}
-        sys.exit(1)
+        filerr('%s is already open'% infile)
+
       inpf[infile]=xf.read()
       xf.close()
       tokens=None
       continue
 
     if len(inpf)==0:
-      print >>sys.stderr, 'On line %(line)d of %(file)s: expected FILE'% \
-        {'line':line,'file':sys.argv[1]}
-      sys.exit(1)
+      filerr('expected FILE')
 
     pm=pstop.match(l)
     if pm is not None:
       sfile=fm.groups()
       if sfile not in inpf:
-        print >>sys.stderr, 'On line %(line)d of %(file)s: %(ifile)s is not open'% \
-          {'line':line,'file':sys.argv[1],'ifile':sfile}
-        sys.exit(1)
+        filerr('%s is not open'% sfile)
+
       del inpf[sfile]
       continue
 
@@ -138,16 +139,14 @@ try:
 
     # Must be a values line
     if tokens is None:
-      print >>sys.stderr, 'On line %(line)d of %(file)s: expected TOKENS'% \
-        {'line':line,'file':sys.argv[1]}
-      sys.exit(1)
+      filerr('expected TOKENS')
 
     vals=cleansep(l)
 
     if len(tokens) != len(vals):
-      print >>sys.stderr, 'On line %(line)d of %(file)s: the number of values (%(vals)d) does not match the number of tokens (%(toks)d)'% \
-        {'line':line,'file':sys.argv[1],'vals':len(vals),'toks':len(tokens)}
-      sys.exit(1)
+      filerr('the number of values (%(vals)d) does not match the number of tokens (%(toks)d)'% \
+        {'vals':len(vals),'toks':len(tokens)}
+      )
 
     macs=deepcopy(globs)
     for n in range(len(tokens)):
