@@ -26,13 +26,15 @@
  * The combination of order and priority must be unique.
  *
  * Interleaved channels must have the same number of samples.
+ *
+ * Each channel can have only one entry
  */
 
 /*
  * A list of seqent is stored in the seq_ctor member
  * of the xy566 structure.
  *
- * It is sorted in accending order by channel, order, priority
+ * It is sorted in accending order by order, priority
  */
 typedef struct {
   ELLNODE node; /* must be first */
@@ -45,9 +47,6 @@ typedef struct {
 } seqent;
 
 #define node2seqent(n) ( (seqent*)(n) )
-
-#define entFirst(list) node2seqent(ellFirst(list))
-#define entNext(ent) node2seqent(ellNext(&(ent)->node))
 
 void
 seq566set(int id, int ch, int nsamp, int ord, int prio)
@@ -93,9 +92,7 @@ seq566set(int id, int ch, int nsamp, int ord, int prio)
     return;
   }
 
-  /* find location for insertion which maintains
-   * sorted order
-   */
+  /* Search to see that the rules are followed */
   for(node=ellFirst(&card->seq_ctor), prev=NULL;
       node;
       prev=node, node=ellNext(node)
@@ -105,18 +102,31 @@ seq566set(int id, int ch, int nsamp, int ord, int prio)
       errlogPrintf("Channel %d already used\n",ch);
       card->fail=1;
       return;
-    }else if(ent->channel > ch)
-      break;
-    else if(ent->channel >= ch && ent->order > ord)
-      break;
-    else if(ent->channel >= ch && ent->order == ord && ent->priority > prio)
-      break;
-    else if(ent->channel >= ch && ent->order == ord && ent->priority == prio){
+    }else if(ent->order == ord && ent->priority == prio){
       errlogPrintf("Order %d and prio %d are already used by channel %d\n",
         ord,prio,ent->channel);
       card->fail=1;
       return;
+    }else if(ent->order == ord && ent->nsamples != nsamp){
+      errlogPrintf("Order %d must have size %u\n",
+        ord,ent->nsamples);
+      card->fail=1;
+      return;
     }
+  }
+
+  /* find location for insertion which maintains
+   * sorted order
+   */
+  for(node=ellFirst(&card->seq_ctor), prev=NULL;
+      node;
+      prev=node, node=ellNext(node)
+  ){
+    ent=node2seqent(node);
+    if(ent->order > ord)
+      break;
+    else if(ent->order == ord && ent->priority > prio)
+      break;
   }
 
   /* node and/or prev may be NULL if this
@@ -142,6 +152,7 @@ seq566set(int id, int ch, int nsamp, int ord, int prio)
 
 int finish566seq(xy566* card)
 {
+  ELLNODE *nfirst, *nlast;
   seqent *bfirst, *blast;
   size_t cord, cprio, csize;
   size_t nchan; /* number of channels with order 'cord' */
@@ -150,17 +161,13 @@ int finish566seq(xy566* card)
 
   memset(&card->seq,0,sizeof(card->seq));
 
-  if(!ellFirst(&card->seq_ctor)){
-    errlogPrintf("Card %d has no channel definitions\n",card->id);
-    return 1;
-  }
-
   if(dbg566>1){
     errlogPrintf("Sequence Source for card %d\n",card->id);
-    for(bfirst=entFirst(&card->seq_ctor);
-        bfirst;
-        bfirst=entNext(bfirst)
+    for(nfirst=ellFirst(&card->seq_ctor);
+        nfirst;
+        nfirst=ellNext(nfirst)
     ){
+      bfirst=node2seqent(nfirst);
       errlogPrintf("Ch %u (%u) %u:%u\n",
         bfirst->channel,bfirst->nsamples,
         bfirst->order,bfirst->priority
@@ -169,21 +176,29 @@ int finish566seq(xy566* card)
     bfirst=NULL;
   }
 
+  nfirst=ellFirst(&card->seq_ctor);
+  if(!nfirst){
+    errlogPrintf("Card %d has no channel definitions\n",card->id);
+    return 1;
+  }
+
   /* The sequence is constructed block by block
    * where each block is all the channels with
    * the same order.
    */
   do{
-    bfirst=entFirst(&card->seq_ctor);
+    bfirst=node2seqent(nfirst);
     cord=bfirst->order;
     cprio=bfirst->priority;
     csize=bfirst->nsamples;
 
     /* find the entry after the last entry for this order */
-    for(blast=entNext(bfirst), nchan=1;
-        blast;
-        blast=entNext(blast), nchan++
+    for(nlast=ellNext(nfirst), nchan=1;
+        nlast;
+        nlast=ellNext(nlast), nchan++
     ){
+      blast=node2seqent(nlast);
+
       if(blast->order > cord)
         break;
 
@@ -202,25 +217,30 @@ int finish566seq(xy566* card)
       }
     }
 
+    /* at this point nlast can be NULL and blast can be invalid */
+
     /* this order # will require nchan*csize entries in the sequence list */
 
     if( seqpos + nchan*csize >= sizeof(card->seq) ){
       errlogPrintf("Card %d does not have enough sequence ram to "
         "sample all requested channels\n",card->id);
+      errlogPrintf("cur %u nchan %u csize %u lim %u\n",
+        seqpos,nchan,csize,sizeof(card->seq));
       return 1;
     }
 
-    for(i=0; bfirst!=blast; bfirst=entNext(bfirst), i++)
+    for(i=0; nfirst!=nlast; nfirst=ellNext(nfirst), i++)
     {
+      bfirst=node2seqent(nfirst);
       for(j=0; j<csize; j++){
         card->seq[seqpos + i + j*nchan]=bfirst->channel;
       }
     }
     seqpos+=nchan*csize;
 
-    /* blast is the frist entry for the next order */
-    bfirst=blast;
-  }while(bfirst);
+    /* nlast is the frist entry for the next order */
+    nfirst=nlast;
+  }while(nfirst);
 
   if(seqpos==0){
     errlogPrintf("Card %d defines no samples?!?\n",card->id);
@@ -230,10 +250,11 @@ int finish566seq(xy566* card)
   card->seq[seqpos-1]|=SEQ_END|SEQ_IRQ;
 
   /* allocate final data buffers */
-  for(bfirst=entFirst(&card->seq_ctor), i=0;
-      bfirst;
-      bfirst=entNext(bfirst), i++
+  for(nfirst=ellFirst(&card->seq_ctor), i=0;
+      nfirst;
+      nfirst=ellNext(nfirst), i++
   ){
+    bfirst=node2seqent(nfirst);
     card->dlen[i]=bfirst->nsamples;
     card->data[i]=calloc(bfirst->nsamples,sizeof(epicsUInt16));
     if(!card->data[i]){
@@ -252,20 +273,26 @@ int finish566seq(xy566* card)
         errlogPrintf("\n");
       else if(i%4==3)
         errlogPrintf(" ");
+      if(card->seq[i]&SEQ_END){
+        errlogPrintf("\n");
+        break;
+      }
     }
   }
 
   /* Now clean up things which don't need to persist when running */
 
-  bfirst=entFirst(&card->seq_ctor);
-  while(bfirst){
-    blast=entNext(bfirst);
+  nfirst=ellFirst(&card->seq_ctor);
+  while(nfirst){
+    bfirst=node2seqent(nfirst);
+    nlast=ellNext(nfirst);
 
     ellDelete(&card->seq_ctor, &bfirst->node);
     free(bfirst);
 
-    bfirst=blast;
+    nfirst=nlast;
   }
 
   return 0;
 }
+
