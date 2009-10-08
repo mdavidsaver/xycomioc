@@ -69,6 +69,7 @@ xycom566setup(
     return;
   }
 
+  card->id=id;
   card->fail=0;
   card->clk_div=0; /* stc uninitialized */
   ellInit(&card->seq_ctor);
@@ -174,10 +175,10 @@ xycom566_init(void)
       WRITE16(card->base+XY566_CSR, csr|XY566_CSR_RED|XY566_CSR_GRN);
 
     }
-  }
 
-  WRITE16(card->base+XY566_RAM, 0);
-  WRITE8(card->base+XY566_SEQ, 0);
+    WRITE16(card->base+XY566_RAM, 0);
+    WRITE8(card->base+XY566_SEQ, 0);
+  }
 
   return 0;
 }
