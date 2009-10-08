@@ -1,0 +1,18 @@
+
+record(bi, "$(P)run:status") {
+  field( DTYP, "XYCOM 566")
+  field( INP , "#C$(C) S0 @")
+  field( SCAN, "1 second")
+  field( ZNAM, "Stopped")
+  field( ONAM, "Running")
+}
+
+record(bo, "$(P)run") {
+  field( DTYP, "XYCOM 566")
+  field( OUT , "#C$(C) S0 @")
+  field( ZNAM, "Stop")
+  field( ONAM, "Run")
+  field( VAL , 0 )
+  field( PINI, "YES")
+}
+
