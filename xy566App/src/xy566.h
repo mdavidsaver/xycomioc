@@ -31,6 +31,7 @@
 #define XY566_STD 0xC0 /* STC Data port */
 #define XY566_STC 0xC3 /* STC Control port */
 #define XY566_GRB 0x101 /* Gain RAM base */
+#define XY566_GAIN(N) ( XY566_GRB + 2*(N) )
 #define XY566_SRB 0x201 /* Seqence ram base */
 
 

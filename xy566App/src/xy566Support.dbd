@@ -1,5 +1,6 @@
 device(bi, VME_IO, devBi566Status, "XYCOM 566")
 device(bo, VME_IO, devBo566Control, "XYCOM 566")
+device(mbbo, VME_IO, devMbbo566Gain, "XYCOM 566 Gain")
 driver(drvXycom566)
 registrar(register566)
 variable(dbg566,int)
