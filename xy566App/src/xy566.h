@@ -5,6 +5,7 @@
 #include <epicsTypes.h>
 #include <ellLib.h>
 #include <dbScan.h>
+#include <epicsMutex.h>
 
 #define XY566_CSR 0x80
 #  define XY566_CSR_RED 0x0001
@@ -38,7 +39,7 @@ typedef struct {
   short id;
 
   /* Set by a config function to indicate failure
-   * And to prevent device support from using a
+   * to prevent device support from using a
    * half configured device.
    */
   int fail:1;
@@ -63,15 +64,35 @@ typedef struct {
 
   epicsMutexId guard;
 
-  unsigned int nchan /* either 16 or 32 */
+  unsigned int nchan; /* either 16 or 32 */
 
-  IOSCANPVT trig_irq;
   IOSCANPVT seq_irq;
-  IOSCANPVT evt_irq;
+
+  /* Holds the sampling sequence last set to
+   * the card.  Needed when interpreting
+   * downloaded data.
+   */
+  epicsUInt8 seq[256];
+
+  /* Array and length of channel data */
+  epicsUInt16 *data[32];
+  epicsUInt16 dlen[32];
+
+  /* Used by sequence constructor
+   * during initialization only.
+   */
+  ELLLIST seq_ctor;
 } xy566;
 
 #define node2priv(n) ( (xy566*)(n) )
 
 xy566* get566(short id);
+
+
+#define WRITE16(addr, val) ( *(volatile epicsUInt16*)(addr) = (val) )
+#define WRITE8(addr, val) ( *(volatile epicsUInt8*)(addr) = (val) )
+
+#define READ16(addr) ( *(volatile epicsUInt16*)(addr) )
+#define READ8(addr) ( *(volatile epicsUInt8*)(addr) )
 
 #endif /* XY566_H_INC */

@@ -1,7 +1,12 @@
 
 #include "xy566.h"
 
+#include <stdlib.h>
+
 #include <epicsThread.h>
+#include <epicsExport.h>
+#include <iocsh.h>
+#include <errlog.h>
 
 /*
  * Commands for manipulationg the AM9513
@@ -18,20 +23,35 @@
  *
  * Note: The interval of the Sequence clock must
  *       be greater then the Sample clock.
+ *
+ * Note: The 566 uses inverted logic.  Counter
+ *       outputs will normally be high and go
+ *       low on their terminal count (TC).
+ *
+ * Interested parties should read:
+ * AM9513A/AM9513
+ * System Timing Controller
+ * Technical Manual
+ *
+ * Published by Advanced Micro Devices
+ * 1984
+ *
+ * A copy of this document is included with the
+ * printed material shipped with the 566.
  */
 
 /* The 566 document states that a delay
  * of 1.5us is required between all STC
  * register operations.
  */
-#define STCNOOP epicsSleep(1.5e-6);
+#define STCNOOP epicsThreadSleep(1.5e-6);
 
 static
 void
 stcreset(xy566 *card, int div)
 {
   volatile epicsUInt8 *ctrl=card->base+XY566_STC;
-  volatile epicsUInt16 *data=card->base+XY566_STD;
+  volatile epicsUInt16 *data=(volatile epicsUInt16*)(card->base+XY566_STD);
   epicsUInt16 mmreg=0;
 
   *ctrl=0xff; /* Reset */
@@ -70,7 +90,7 @@ stcreset(xy566 *card, int div)
    * Note: 0 and 11 are equivalent
    */
 
-  mmreg|=0x0000 /* F1 (external clock no division) */
+  mmreg|=0x0000; /* F1 (external clock no division) */
 
   /* Disable compare and Time of Day */
   mmreg|=0x0000;
@@ -81,18 +101,17 @@ stcreset(xy566 *card, int div)
   *data=mmreg;
 
   card->clk_div=1;
-  return 0;
 }
 
 /* Disable channel
  * chan - 1->5
  */
 static
-int
+void
 stcdisable(xy566 *card, int chan)
 {
   volatile epicsUInt8 *ctrl=card->base+XY566_STC;
-  volatile epicsUInt16 *data=card->base+XY566_STD;
+  volatile epicsUInt16 *data=(volatile epicsUInt16*)(card->base+XY566_STD);
 
   /* Disable channel */
   *ctrl = 0xC0 | (1<<chan);
@@ -137,7 +156,7 @@ stcdisable(xy566 *card, int chan)
  * This is useful when using the software trigger register
  */
 void
-stc566simple(int id, int div int period)
+stc566simple(int id, int div, int period)
 {
   xy566 *card=get566(id);
   volatile epicsUInt8 *ctrl;
@@ -145,18 +164,28 @@ stc566simple(int id, int div int period)
 
   if(!card){
     errlogPrintf("Invalid ID\n");
+    card->fail=1;
     return;
   }
 
+  if(card->fail) return;
+
   if(div<1 || div>16){
     errlogPrintf("STC divider out of range (1->16)\n");
-    return 1;
+    card->fail=1;
+    return;
   }
 
-  epicsMutexMustLock(&card->guard);
+  if(period<1 || period>0xffff){
+    errlogPrintf("STC period out of range (1->0xffff)\n");
+    card->fail=1;
+    return;
+  }
+
+  epicsMutexMustLock(card->guard);
 
   ctrl=card->base+XY566_STC;
-  data=card->base+XY566_STD;
+  data=(volatile epicsUInt16*)(card->base+XY566_STD);
 
   stcreset(card,div);
   STCNOOP;
@@ -198,5 +227,29 @@ stc566simple(int id, int div int period)
   *ctrl = 0x68;
   STCNOOP;
 
-  epicsMutexUnlock(&card->guard);
+  epicsMutexUnlock(card->guard);
 }
+
+/********************** IOCSH *************************/
+
+/* stc566simple */
+static const iocshArg stc566simpleArg0 = { "Card id #",iocshArgInt};
+static const iocshArg stc566simpleArg1 = { "STC clock divider (1->16)",iocshArgInt};
+static const iocshArg stc566simpleArg2 = { "Sample period in multiples of 0.25us * div (1->0xffff)",iocshArgInt};
+static const iocshArg * const stc566simpleArgs[3] =
+{
+    &stc566simpleArg0,&stc566simpleArg1,&stc566simpleArg2
+};
+static const iocshFuncDef stc566simpleFuncDef =
+    {"stc566simple",3,stc566simpleArgs};
+static void stc566simpleCallFunc(const iocshArgBuf *args)
+{
+    stc566simple(args[0].ival,args[1].ival,args[2].ival);
+}
+
+static
+void stc566Register(void)
+{
+  iocshRegister(&stc566simpleFuncDef,stc566simpleCallFunc);
+}
+epicsExportRegistrar(stc566Register);

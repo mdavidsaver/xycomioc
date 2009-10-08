@@ -1,0 +1,3 @@
+driver(drvXycom566)
+registrar(drv566Register)
+registrar(stc566simple)
