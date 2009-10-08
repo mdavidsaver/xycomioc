@@ -17,6 +17,7 @@ xy566_SRCS += stc566.c
 xy566_SRCS += seq566.c
 xy566_SRCS += devbi566.c
 xy566_SRCS += devmbbo566.c
+xy566_SRCS += devai566.c
 xy566_SRCS += iocsh566.c
 
 xy566_LIBS += Com
