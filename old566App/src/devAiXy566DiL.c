@@ -29,6 +29,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <errlog.h>
 #include <alarm.h>
 #include <cvtTable.h>
 #include <dbDefs.h>

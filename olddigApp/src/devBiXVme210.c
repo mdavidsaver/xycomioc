@@ -26,6 +26,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "errlog.h"
 #include "alarm.h"
 #include "dbDefs.h"
 #include "dbAccess.h"

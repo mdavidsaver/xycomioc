@@ -70,6 +70,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include <errlog.h>
 #include <dbDefs.h>
 #include <dbScan.h>
 #include <drvSup.h>

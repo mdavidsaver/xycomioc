@@ -28,6 +28,7 @@
 
 #include <alarm.h>
 #include <cvtTable.h>
+#include <errlog.h>
 #include <dbDefs.h>
 #include <dbAccess.h>
 #include <recGbl.h>
