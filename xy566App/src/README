@@ -10,3 +10,50 @@ which is used to generate the sampling clock.
 While the 566 has several operating modes, this
 driver uses only continuous sequence mode.  This is the most
 flexible mode.
+
+
+IOC Shell functions
+
+ Device setup
+
+xycom566setup(
+      int id,     Arbitrary id for this card
+      int cbase,  A16 base address set on switch block S3
+      int dbase,  A24 base address set on switch block S2
+      int level,  IRQ level set on switch block S1
+      int vec,    IRQ vector (usual restrictions)
+      int bipol   0 - 32 unipolar, 1 - 16 bi polar
+)
+
+ Clock setup
+
+stc566simple(
+      int id,     Arbitrary id for this card
+      int div,    Divider on 4 MHz reference clock
+      int period  sample clock period (.25*div*period)
+)
+
+ Sample Sequence construction
+
+seq566set(
+      int id,     Arbitrary id for this card
+      int ch,     Channel 0-31 or 0-16 as appropriate
+      int nsamp,  Number of samples (>1)
+      int ord,    Order to sample in (lowest first) (1-32)
+      int prio    Priority disambiguate channels with the same order
+)
+
+Example
+
+seq566set(1, 5, 10, 1, 1)
+seq566set(1, 6, 10, 2, 1)
+
+Samples channel 6 10 times, then samples channel 7 10 times.
+
+seq566set(1, 5, 10, 1, 1)
+seq566set(1, 6, 10, 1, 2)
+
+Samples channels 6 and 7 alternately (ie 6,7,6,7,6,7...) for
+a total of 10 samples each.
+
+
