@@ -139,9 +139,8 @@ xycom566setup(
   ellAdd(&xy566s,&card->node);
 }
 
-static
-long
-xycom566_init(void)
+void
+xycom566finish(void)
 {
   ELLNODE *node;
   xy566* card;
@@ -172,7 +171,7 @@ xycom566_init(void)
        */
       WRITE16(card->base+XY566_CSR, XY566_SWS);
       WRITE16(card->base+XY566_CSR, XY566_CSR_RED);
-      return 1;
+      return;
 
     }
     
@@ -185,7 +184,7 @@ xycom566_init(void)
     WRITE16(card->base+XY566_CSR, csr);
   }
 
-  return 0;
+  return;
 }
 
 xy566* get566(short id)
@@ -263,5 +262,5 @@ void xycom566isr(void *arg)
 
 /*********************** DRVET ************************/
 
-drvet drvXycom566 = {2, NULL, xycom566_init};
+drvet drvXycom566 = {2, NULL, NULL};
 epicsExportAddress(drvet,drvXycom566);

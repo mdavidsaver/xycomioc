@@ -3,7 +3,6 @@ device(bo, VME_IO, devBo566Control, "XYCOM 566")
 device(mbbo, VME_IO, devMbbo566Gain, "XYCOM 566 Gain")
 device(ai, VME_IO, devAi566, "XYCOM 566")
 device(waveform, VME_IO, devWf566, "XYCOM 566")
-driver(drvXycom566)
 registrar(register566)
 variable(dbg566,int)
 

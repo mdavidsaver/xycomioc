@@ -114,6 +114,9 @@ xycom566setup(
 );
 
 void
+xycom566finish(void);
+
+void
 stc566simple(int id, int div, int period);
 
 void

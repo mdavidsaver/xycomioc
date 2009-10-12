@@ -24,6 +24,17 @@ static void xycom566setupCallFunc(const iocshArgBuf *args)
                   args[3].ival,args[4].ival,args[5].ival);
 }
 
+/* xycom566finish */
+static const iocshArg * const xycom566finishArgs[0] =
+{
+};
+static const iocshFuncDef xycom566finishFuncDef =
+    {"xycom566finish",0,xycom566finishArgs};
+static void xycom566finishCallFunc(const iocshArgBuf *args)
+{
+    xycom566finish();
+}
+
 /* stc566simple */
 static const iocshArg stc566simpleArg0 = { "Card id #",iocshArgInt};
 static const iocshArg stc566simpleArg1 = { "STC clock divider (1->16)",iocshArgInt};
@@ -61,6 +72,7 @@ static
 void register566(void)
 {
   iocshRegister(&xycom566setupFuncDef,xycom566setupCallFunc);
+  iocshRegister(&xycom566finishFuncDef,xycom566finishCallFunc);
   iocshRegister(&stc566simpleFuncDef,stc566simpleCallFunc);
   iocshRegister(&seq566setFuncDef,seq566setCallFunc);
 }
