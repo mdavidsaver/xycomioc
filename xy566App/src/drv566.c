@@ -25,6 +25,9 @@ static ELLLIST xy566s={{NULL,NULL},0};
 static
 void xycom566isr(void *);
 
+static
+void xycom566isrcb(struct callbackPvt *);
+
 void
 xycom566setup(
       int id,
@@ -70,6 +73,7 @@ xycom566setup(
   }
 
   memset(&card->dlen,0,sizeof(card->dlen));
+  memset(&card->cb_irq,0,sizeof(card->cb_irq));
 
   card->id=id;
   card->fail=0;
@@ -121,6 +125,9 @@ xycom566setup(
 
   card->guard=epicsMutexMustCreate();
   scanIoInit(&card->seq_irq);
+  callbackSetCallback(xycom566isrcb, &card->cb_irq);
+  callbackSetPriority(priorityHigh, &card->cb_irq);
+  callbackSetUser(card, &card->cb_irq);
 
   WRITE8(card->base+XY566_VEC, vec);
 
@@ -206,56 +213,78 @@ static
 void xycom566isr(void *arg)
 {
   xy566 *card=arg;
-  epicsUInt16 csr=READ16(card->base+XY566_CSR);
+  epicsUInt16 csr;
+  csr=READ16(card->base+XY566_CSR);
+  if(!(csr&XY566_CSR_PND))
+    return; /* not ours */
+  
+  /* Disable sequence controller, acknowledge
+   * interrupts, and schedule further processing
+   * out of interrupt context
+   */
+
+  csr&=~XY566_CSR_SEQ; /* disable seq. cont. */
+
+  /* writing back what was read will clear any pending
+   * interrupts
+   */
+
+  WRITE16(card->base+XY566_CSR, csr);
+
+  callbackRequest(&card->cb_irq);
+
+  return;
+}
+
+static
+void xycom566isrcb(CALLBACK *cb)
+{
+  xy566 *card;
+  epicsUInt16 csr;
   epicsUInt16 datacnt[32];
   epicsUInt16 dcnt;
   size_t i, ch;
 
-  if(!(csr&XY566_CSR_PND))
-    return; /* not ours */
+  callbackGetUser(card,cb);
 
   epicsMutexMustLock(card->guard);
 
-  csr=READ16(card->base+XY566_CSR);
+  /* clear number of data points */
+  memset(datacnt,0,sizeof(datacnt));
 
-  /* disable sequence controller */
-  csr&=~XY566_CSR_SEQ;
+  /* number of samples taken */
+  dcnt=READ16(card->base+XY566_RAM);
 
-  /* and acknowledge interrupts */
-  WRITE16(card->base+XY566_CSR,
-    csr|XY566_CSR_SIP|XY566_CSR_TIP|XY566_CSR_EIP);
+  if(dcnt>256){
+    /* Somehow the sequence was restart w/o resetting
+     * the pointer, or changed by an outside program
+     */
+    dcnt=256;
+    errlogPrintf("Data longer then expected\n");
+  }
 
-  if(csr&XY566_CSR_SIP){
+  for(i=0;i<dcnt;i++){
+    ch=card->seq[i]&0x1f;
 
-    memset(datacnt,0,sizeof(datacnt));
+    card->data[ch][datacnt[ch]]=READ16(card->data_base+2*i);
+    datacnt[ch]++;
 
-    /* number of samples taken */
-    dcnt=READ16(card->base+XY566_RAM);
-
-    if(dcnt>256){
-      /* Somehow the sequence was restart resetting the pointer
-       * or changed by an outside program
-       */
-      dcnt=256;
-      errlogPrintf("Data longer then expected\n");
-    }
-
-    for(i=0;i<dcnt;i++){
-      ch=card->seq[i]&0x1f;
-
-      card->data[ch][datacnt[ch]]=READ16(card->data_base+2*i);
-      datacnt[ch]++;
-
-      if( card->seq[i]&SEQ_END )
-        break;
-    }
-  } /* if(csr&XY566_CSR_SIP) */
+    if( card->seq[i]&SEQ_END )
+      break;
+  }
+  
+  /* reset pointers */
+  WRITE16(card->base+XY566_RAM, 0);
+  WRITE8(card->base+XY566_SEQ, 0);
 
   csr=READ16(card->base+XY566_CSR);
 
   /* enable sequence controller */
   csr|=XY566_CSR_SEQ;
+
   WRITE16(card->base+XY566_CSR, csr);
+
+  scanIoRequest(card->seq_irq);
 
   epicsMutexUnlock(card->guard);
 }

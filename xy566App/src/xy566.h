@@ -6,6 +6,7 @@
 #include <ellLib.h>
 #include <dbScan.h>
 #include <epicsMutex.h>
+#include <callback.h>
 
 #define XY566_CSR 0x80
 #  define XY566_CSR_RED 0x0001
@@ -69,6 +70,7 @@ typedef struct {
 
   unsigned int nchan; /* either 16 or 32 */
 
+  CALLBACK cb_irq;
   IOSCANPVT seq_irq;
 
   /* Holds the sampling sequence last set to
