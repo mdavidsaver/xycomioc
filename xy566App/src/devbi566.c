@@ -62,17 +62,17 @@ long read_status(biRecord* prec)
 
   if(func==0){
 
-     /* read running status */
+    /* read running status */
 
-     epicsMutexMustLock(card->guard);
+    epicsMutexMustLock(card->guard);
 
-     csr=READ16(card->base+XY566_CSR);
+    csr=READ16(card->base+XY566_CSR);
 
-     prec->rval= csr&XY566_CSR_SRT;
+    prec->rval= csr&XY566_CSR_SRT;
 
-     epicsMutexUnlock(card->guard);
+    epicsMutexUnlock(card->guard);
 
-     return 0;
+    return 0;
   }else{
     errMessage(errlogFatal,"Invalid function given to record");
     return 1;
