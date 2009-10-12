@@ -18,4 +18,8 @@ seq566set(1, 3, 40, 4, 2)
 seq566set(1, 4, 1, 5, 1)
 seq566set(1, 5, 1, 6, 1)
 
+dbLoadRecords("db/xy566base.db","P=,C=1")
+dbLoadRecords("db/xy566gain.db","P=,CH=ch1,C=1,N=0")
+dbLoadRecords("db/xy566val.db","P=,CH=ch1,C=1,N=0")
+
 iocInit()
