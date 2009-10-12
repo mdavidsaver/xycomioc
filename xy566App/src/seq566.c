@@ -279,6 +279,14 @@ int finish566seq(xy566* card)
       }
     }
   }
+  
+  /* Actually write to the card */
+  
+  for(i=0; i<sizeof(card->seq); i++){
+    WRITE8(card->base+XY566_SEQR(i), card->seq[i]);
+    if(card->seq[i]&SEQ_END)
+      break;
+  }
 
   /* Now clean up things which don't need to persist when running */
 

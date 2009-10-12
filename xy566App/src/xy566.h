@@ -33,6 +33,7 @@
 #define XY566_GRB 0x101 /* Gain RAM base */
 #define XY566_GAIN(N) ( XY566_GRB + 2*(N) )
 #define XY566_SRB 0x201 /* Seqence ram base */
+#define XY566_SEQR(N) ( XY566_SRB + 2*(N) )
 
 
 /* Special bits in sequence ram */
