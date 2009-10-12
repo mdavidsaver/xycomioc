@@ -21,7 +21,7 @@ seq566set(1, 5, 1, 6, 1)
 xycom566finish()
 
 dbLoadRecords("db/xy566base.db","P=,C=1")
-dbLoadRecords("db/xy566gain.db","P=,CH=ch1,C=1,N=0")
+dbLoadRecords("db/xy566gain.db","P=,CH=ch1:,C=1,N=0")
 dbLoadRecords("db/xy566val.db","P=,CH=ch1,C=1,N=0")
 dbLoadRecords("db/xy566gain.db","P=,CH=ch2,C=1,N=1")
 dbLoadRecords("db/xy566wave.db","P=,CH=ch2,C=1,N=1,L=4")

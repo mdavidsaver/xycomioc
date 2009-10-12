@@ -10,9 +10,10 @@ record(bi, "$(P)run:status") {
 record(bo, "$(P)run") {
   field( DTYP, "XYCOM 566")
   field( OUT , "#C$(C) S0 @")
+  field( SCAN, ".1 second")
   field( ZNAM, "Stop")
   field( ONAM, "Run")
-  field( VAL , 0 )
+  field( RVAL, 1 )
   field( PINI, "YES")
 }
 
