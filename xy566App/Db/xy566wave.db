@@ -1,7 +1,8 @@
 
 record(waveform, "$(P)$(CH)") {
   field( DTYP, "XYCOM 566")
-  field( SCAN, "I/O/ Intr")
+  field( SCAN, "I/O Intr")
   field( INP , "#C$(C) S$(N) @")
+  field( FTVL, "DOUBLE")
   field( NELM, $(L))
 }

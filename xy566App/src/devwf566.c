@@ -84,16 +84,14 @@ struct {
   DEVSUPFUN init_record;
   DEVSUPFUN get_ioint_info;
   DEVSUPFUN read;
-  DEVSUPFUN special_linconv;
 } devWf566 =
 {
-  6,
+  5,
   NULL,
   NULL,
   (DEVSUPFUN)init_record,
   (DEVSUPFUN)get_ioint_info,
-  (DEVSUPFUN)read_chan,
-  NULL
+  (DEVSUPFUN)read_chan
 };
 epicsExportAddress(dset,devWf566);
 
