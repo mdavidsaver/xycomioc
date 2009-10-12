@@ -125,7 +125,7 @@ xycom566setup(
   WRITE8(card->base+XY566_VEC, vec);
 
   devEnableInterruptLevelVME(level);
-  devConnectInterruptVME(vec, xycom566isr, card);
+  assert(devConnectInterruptVME(vec, xycom566isr, card)==0);
 
   /* Configure card
    * Mode: continuous sequence (default)
