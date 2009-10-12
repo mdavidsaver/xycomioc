@@ -134,7 +134,7 @@ xycom566setup(
    * sequence controller disable (will be enabled during drvsup init)
    */
   WRITE16(card->base+XY566_CSR,
-    XY566_CSR_GRN|XY566_CSR_INA);
+    XY566_CSR_GRN);
 
   ellAdd(&xy566s,&card->node);
 }
@@ -180,7 +180,8 @@ xycom566_init(void)
     WRITE8(card->base+XY566_SEQ, 0);
 
     csr=READ16(card->base+XY566_CSR);
-    csr|=XY566_CSR_SEQ|XY566_CSR_RED|XY566_CSR_GRN;
+    csr|=XY566_CSR_SEQ|XY566_CSR_INA|XY566_CSR_SIE;
+    csr|=XY566_CSR_RED|XY566_CSR_GRN;
     WRITE16(card->base+XY566_CSR, csr);
   }
 
