@@ -91,7 +91,7 @@ long write_control(boRecord* prec)
 
      epicsMutexMustLock(card->guard);
 
-     WRITE16(card->base+XY566_SWS, 1);
+     WRITE16(card->base+XY566_SWS, 0);
 
      epicsMutexUnlock(card->guard);
 
