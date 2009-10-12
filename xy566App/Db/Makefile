@@ -6,6 +6,7 @@ include $(TOP)/configure/CONFIG
 DB += xy566base.db
 DB += xy566gain.db
 DB += xy566val.db
+DB += xy566wave.db
 
 include $(TOP)/configure/RULES
 #----------------------------------------

@@ -15,12 +15,12 @@
 #include <dbAccess.h>
 #include <epicsExport.h>
 
-#include <aiRecord.h>
+#include <waveformRecord.h>
 
 #include "xy566.h"
 
 static
-long init_record(aiRecord* prec)
+long init_record(waveformRecord* prec)
 {
   xy566 *card=get566(prec->inp.value.vmeio.card);
 
@@ -28,6 +28,9 @@ long init_record(aiRecord* prec)
     errMessage(errlogFatal,"card# not associated with a device");
     return S_dev_noDevice;
   }
+  
+  if(prec->ftvl!=DBF_DOUBLE)
+    return S_db_badDbrtype;
 
   return 0;
 }
@@ -43,24 +46,27 @@ long get_ioint_info(int dir,dbCommon* prec,IOSCANPVT* io)
 }
 
 static
-long read_chan(aiRecord* prec)
+long read_chan(waveformRecord* prec)
 {
   xy566 *card=prec->dpvt;
   short chan=prec->inp.value.vmeio.signal;
+  double *fptr=prec->bptr;
+  size_t i;
 
-  if(chan < 0 || chan > card->nchan){
-    epicsMutexUnlock(card->guard);
-    return 1;
-  }
+  if(chan < 0 || chan > card->nchan)
+    return -1;
 
   epicsMutexMustLock(card->guard);
 
   if(card->dlen[chan]<1){
     epicsMutexUnlock(card->guard);
-    return 1;
+    return -1;
   }
 
-  prec->rval=card->data[chan][0];
+  prec->nord=max(prec->nelm, card->dlen[chan]);
+
+  for(i=0; i<prec->nord; i++)
+    fptr[i]=card->data[chan][i];
 
   epicsMutexUnlock(card->guard);
 
@@ -75,7 +81,7 @@ struct {
   DEVSUPFUN get_ioint_info;
   DEVSUPFUN read;
   DEVSUPFUN special_linconv;
-} devAi566 =
+} devWf566 =
 {
   6,
   NULL,
@@ -85,5 +91,5 @@ struct {
   (DEVSUPFUN)read_chan,
   NULL
 };
-epicsExportAddress(dset,devAi566);
+epicsExportAddress(dset,devWf566);
 
