@@ -88,14 +88,15 @@ long write_control(boRecord* prec)
   if(func==0){
 
     /* Start/Stop aquisition */
+    if(!!prec->rval){
 
-     epicsMutexMustLock(card->guard);
+      epicsMutexMustLock(card->guard);
 
-     WRITE8(card->base+XY566_SWS, 0);
+      WRITE8(card->base+XY566_SWS, 0);
 
-     epicsMutexUnlock(card->guard);
-
-     return 0;
+      epicsMutexUnlock(card->guard);
+    }
+    return 0;
   }else{
     errMessage(errlogFatal,"Invalid function given to record");
     return 1;
