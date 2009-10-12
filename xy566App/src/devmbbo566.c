@@ -28,6 +28,10 @@ long init_record(mbboRecord* prec)
     errMessage(errlogFatal,"card# not associated with a device");
     return S_dev_noDevice;
   }
+  if(!!card->fail)
+    return 1;
+
+  prec->dpvt=card;
 
   return 0;
 }

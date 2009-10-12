@@ -69,6 +69,8 @@ xycom566setup(
     return;
   }
 
+  memset(&card->dlen,0,sizeof(card->dlen));
+
   card->id=id;
   card->fail=0;
   card->clk_div=0; /* stc uninitialized */
@@ -143,12 +145,12 @@ xycom566_init(void)
 {
   ELLNODE *node;
   xy566* card;
+  epicsUInt16 csr;
   
 
   for(node=ellFirst(&xy566s); node; node=ellNext(node))
   {
     card=node2priv(node);
-    epicsUInt16 csr;
 
     if(!card->fail){
       if(!!finish566seq(card)){
@@ -156,28 +158,30 @@ xycom566_init(void)
         card->fail=1;
       }
     }
+    
+    if(!card->clk_div){
+      errlogPrintf("Board #%d STC not initialized and will not be used\n",card->id);
+      card->fail=1;
+    }
 
-    if(card->fail)
+    if(!!card->fail){
       errlogPrintf("Board #%d failed to initialize and will not be used\n",card->id);
 
-    else if(!card->clk_div)
-      errlogPrintf("Board #%d STC not initialized and will not be used\n",card->id);
-
-    if(card->fail || !card->clk_div){
       /* Reset the board again and
        * turn off the LEDS to indicate failure
        */
       WRITE16(card->base+XY566_CSR, XY566_SWS);
       WRITE16(card->base+XY566_CSR, XY566_CSR_RED);
-
-    }else{
-      csr=READ16(card->base+XY566_CSR);
-      WRITE16(card->base+XY566_CSR, csr|XY566_CSR_RED|XY566_CSR_GRN);
+      return 1;
 
     }
-
+    
     WRITE16(card->base+XY566_RAM, 0);
     WRITE8(card->base+XY566_SEQ, 0);
+
+    csr=READ16(card->base+XY566_CSR);
+    csr|=XY566_CSR_SEQ|XY566_CSR_RED|XY566_CSR_GRN;
+    WRITE16(card->base+XY566_CSR, csr);
   }
 
   return 0;

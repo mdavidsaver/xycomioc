@@ -29,6 +29,10 @@ long init_rec(dbCommon* prec, DBLINK* lnk)
     errMessage(errlogFatal,"card# not associated with a device");
     return S_dev_noDevice;
   }
+  if(!!card->fail)
+    return 1;
+
+  prec->dpvt=card;
 
   return 0;
 }

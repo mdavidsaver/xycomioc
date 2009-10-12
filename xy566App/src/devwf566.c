@@ -28,9 +28,13 @@ long init_record(waveformRecord* prec)
     errMessage(errlogFatal,"card# not associated with a device");
     return S_dev_noDevice;
   }
+  if(!!card->fail)
+    return 1;
   
   if(prec->ftvl!=DBF_DOUBLE)
     return S_db_badDbrtype;
+
+  prec->dpvt=card;
 
   return 0;
 }

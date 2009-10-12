@@ -28,6 +28,10 @@ long init_record(aiRecord* prec)
     errMessage(errlogFatal,"card# not associated with a device");
     return S_dev_noDevice;
   }
+  if(!!card->fail)
+    return 1;
+
+  prec->dpvt=card;
 
   return 0;
 }
@@ -49,7 +53,6 @@ long read_chan(aiRecord* prec)
   short chan=prec->inp.value.vmeio.signal;
 
   if(chan < 0 || chan > card->nchan){
-    epicsMutexUnlock(card->guard);
     return 1;
   }
 
