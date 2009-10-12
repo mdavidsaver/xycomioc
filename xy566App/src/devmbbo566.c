@@ -32,6 +32,9 @@ long init_record(mbboRecord* prec)
     return 1;
 
   prec->dpvt=card;
+  prec->nobt=2;
+  prec->mask=0x3;
+  prec->shft=0;
 
   return 0;
 }
@@ -45,7 +48,9 @@ long write_gain(mbboRecord* prec)
   if(chan < 0 || chan > card->nchan)
     return 1;
 
-  WRITE16(card->base+XY566_GAIN(chan), prec->rval);
+  WRITE8(card->base+XY566_GAIN(chan), prec->rval);
+
+  prec->rbv=READ8(card->base+XY566_GAIN(chan));
 
   return 0;
 }
