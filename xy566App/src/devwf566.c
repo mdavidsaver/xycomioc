@@ -67,7 +67,7 @@ long read_chan(waveformRecord* prec)
     return -1;
   }
 
-  prec->nord=max(prec->nelm, card->dlen[chan]);
+  prec->nord=min(prec->nelm, card->dlen[chan]);
 
   for(i=0; i<prec->nord; i++)
     fptr[i]=card->data[chan][i];
