@@ -55,6 +55,12 @@ typedef struct {
    */
   int fail:1;
 
+  /* Is the Sequence Trigger Clock used in this configuration?
+   * If so then the ISR needs to disarm it before attempting
+   * to download data.
+   */
+  int use_seq_clk:1;
+
   /* divider for counter clock.
    * All times are a multiple of .25us times this value.
    */

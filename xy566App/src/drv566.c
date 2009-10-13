@@ -78,6 +78,7 @@ xycom566setup(
   card->id=id;
   card->fail=0;
   card->clk_div=0; /* stc uninitialized */
+  card->use_seq_clk=0;
   ellInit(&card->seq_ctor);
 
   if(!bipol)
@@ -217,6 +218,9 @@ void xycom566isr(void *arg)
   csr=READ16(card->base+XY566_CSR);
   if(!(csr&XY566_CSR_PND))
     return; /* not ours */
+
+  if(card->use_seq_clk)
+    WRITE8(card->base+XY566_STC, 0xC2); /* Disarm Seq. trig clock */
   
   /* Disable sequence controller, acknowledge
    * interrupts, and schedule further processing

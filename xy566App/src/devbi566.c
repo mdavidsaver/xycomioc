@@ -91,8 +91,14 @@ long write_control(boRecord* prec)
     if(!!prec->rval){
 
       epicsMutexMustLock(card->guard);
+    
+      if(card->use_seq_clk){
+        WRITE8(card->base+XY566_STC, 0x22); /* Arm Seq. trig clock */
 
-      WRITE8(card->base+XY566_SWS, 0);
+      }else{
+        WRITE8(card->base+XY566_SWS, 0); /* Software start */
+
+      }
 
       epicsMutexUnlock(card->guard);
     }
