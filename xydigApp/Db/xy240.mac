@@ -27,6 +27,8 @@ FILE "../xybi.db.part"
 
 DTYP = "XYCOM 240"
 
+SCAN = "1 second"
+
 TOKENS N
 0
 1

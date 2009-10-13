@@ -21,7 +21,9 @@ include $(TOP)/configure/RULES
 #----------------------------------------
 #  ADD RULES AFTER THIS LINE
 
-../xy240.mac : ../240port.db.part ../xybo.db.part ../xybi.db.part
+../O.Common/xy240.db : ../xy240.mac ../240port.db.part ../xybo.db.part ../xybi.db.part
+
+../O.Common/xy220.db : ../xy220.mac ../xybo.db.part
 
 ../O.Common/%.db: ../%.mac
 	$(TOP)/dbpp.py $< > $@.tmp

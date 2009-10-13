@@ -9,7 +9,7 @@ include $(TOP)/configure/RULES
 #----------------------------------------
 #  ADD RULES AFTER THIS LINE
 
-../xy566lnl.mac : ../xy566base.db.part ../xy566gain.db.part \
+../O.Common/xy566lnl.db : ../xy566lnl.mac ../xy566base.db.part ../xy566gain.db.part \
  ../xy566wave.db.part ../xy566val.db.part
 
 ../O.Common/%.db: ../%.mac

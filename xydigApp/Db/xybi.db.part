@@ -1,7 +1,7 @@
 
 record(bi, "$(P)in%(N)s") {
   field(DTYP, "%(DTYP)s")
-  field(SCAN, "$(S)")
+  field(SCAN, "%(SCAN)s")
   field(INP , "#C${C} S%(N)s @" )
   field(ZNAM, "Low")
   field(ONAM, "High")

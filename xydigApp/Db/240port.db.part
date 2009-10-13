@@ -1,7 +1,7 @@
 
 record(bo, "$(P)port%(N)s") {
   field(DTYP, "XYCOM 240 Port Direction")
-  field(DESC, "Direction Port %(N)s for bits %(low)s to %(high)s of card ${C}")
+  field(DESC, "Dir. %(N)s for %(low)s to %(high)s of C${C}")
   field(SCAN, "Passive")
   field(OUT , "#C${C} S%(N)s @" )
   field(PINI, "YES")

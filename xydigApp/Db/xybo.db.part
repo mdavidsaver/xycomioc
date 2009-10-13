@@ -3,7 +3,7 @@ record(bo, "$(P)out%(N)s") {
   field(DTYP, "%(DTYP)s")
   field(SCAN, "Passive")
   field(OUT , "#C${C} S%(N)s @" )
-  field(PINI, "$(PINI)")
+  field(PINI, "YES")
   field(VAL , 0 )
   field(ZNAM, "Low")
   field(ONAM, "High")
