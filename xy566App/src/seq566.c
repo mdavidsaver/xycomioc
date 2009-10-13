@@ -58,13 +58,13 @@ seq566set(int id, int ch, int nsamp, int ord, int prio)
   if(card->fail) return;
 
   if(!card){
-    errlogPrintf("Invalid ID\n");
+    printf("Invalid ID\n");
     card->fail=1;
     return;
   }
 
   if(ch<0 || ch>card->nchan){
-    errlogPrintf("Invalid channel (0->%d)\n",card->nchan-1);
+    printf("Invalid channel (0->%d)\n",card->nchan-1);
     card->fail=1;
     return;
   }
@@ -75,19 +75,19 @@ seq566set(int id, int ch, int nsamp, int ord, int prio)
      * The actual max number of samples will depend
      * on what other channels are used
      */
-    errlogPrintf("Invalid number of samples\n");
+    printf("Invalid number of samples\n");
     card->fail=1;
     return;
   }
 
   if(ord<0 || ord >= card->nchan){
-    errlogPrintf("Invalid order (1->%d)\n",card->nchan);
+    printf("Invalid order (1->%d)\n",card->nchan);
     card->fail=1;
     return;
   }
 
   if(prio<1 || prio >= card->nchan){
-    errlogPrintf("Invalid priority (1->%d)\n",card->nchan);
+    printf("Invalid priority (1->%d)\n",card->nchan);
     card->fail=1;
     return;
   }
@@ -99,16 +99,16 @@ seq566set(int id, int ch, int nsamp, int ord, int prio)
   ){
     ent=node2seqent(node);
     if(ent->channel==ch){
-      errlogPrintf("Channel %d already used\n",ch);
+      printf("Channel %d already used\n",ch);
       card->fail=1;
       return;
     }else if(ent->order == ord && ent->priority == prio){
-      errlogPrintf("Order %d and prio %d are already used by channel %d\n",
+      printf("Order %d and prio %d are already used by channel %d\n",
         ord,prio,ent->channel);
       card->fail=1;
       return;
     }else if(ent->order == ord && ent->nsamples != nsamp){
-      errlogPrintf("Order %d must have size %u\n",
+      printf("Order %d must have size %u\n",
         ord,ent->nsamples);
       card->fail=1;
       return;
@@ -136,7 +136,7 @@ seq566set(int id, int ch, int nsamp, int ord, int prio)
 
   ent=malloc(sizeof(seqent));
   if(!ent){
-    errlogPrintf("Out of memory\n");
+    printf("Out of memory\n");
     card->fail=1;
     return;
   }
@@ -162,13 +162,13 @@ int finish566seq(xy566* card)
   memset(&card->seq,0,sizeof(card->seq));
 
   if(dbg566>1){
-    errlogPrintf("Sequence Source for card %d\n",card->id);
+    printf("Sequence Source for card %d\n",card->id);
     for(nfirst=ellFirst(&card->seq_ctor);
         nfirst;
         nfirst=ellNext(nfirst)
     ){
       bfirst=node2seqent(nfirst);
-      errlogPrintf("Ch %u (%u) %u:%u\n",
+      printf("Ch %u (%u) %u:%u\n",
         bfirst->channel,bfirst->nsamples,
         bfirst->order,bfirst->priority
       );
@@ -178,7 +178,7 @@ int finish566seq(xy566* card)
 
   nfirst=ellFirst(&card->seq_ctor);
   if(!nfirst){
-    errlogPrintf("Card %d has no channel definitions\n",card->id);
+    printf("Card %d has no channel definitions\n",card->id);
     return 1;
   }
 
@@ -204,13 +204,13 @@ int finish566seq(xy566* card)
 
       /* sanity check sorting and number of samples */
       else if(blast->order < cord){
-        errlogPrintf("Card %d list not sorted (order)!?!\n",card->id);
+        printf("Card %d list not sorted (order)!?!\n",card->id);
         return 1;
       }else if(blast->priority <= cprio){
-        errlogPrintf("Card %d list not sorted (priority)!?!\n",card->id);
+        printf("Card %d list not sorted (priority)!?!\n",card->id);
         return 1;
       }else if(blast->nsamples != csize){
-        errlogPrintf("Card %d channel %d in order %d has as "
+        printf("Card %d channel %d in order %d has as "
             "incorrect number of samples, %d not %d\n",
             card->id,blast->channel,blast->order,blast->nsamples,csize);
         return 1;
@@ -222,9 +222,9 @@ int finish566seq(xy566* card)
     /* this order # will require nchan*csize entries in the sequence list */
 
     if( seqpos + nchan*csize >= sizeof(card->seq) ){
-      errlogPrintf("Card %d does not have enough sequence ram to "
+      printf("Card %d does not have enough sequence ram to "
         "sample all requested channels\n",card->id);
-      errlogPrintf("cur %u nchan %u csize %u lim %u\n",
+      printf("cur %u nchan %u csize %u lim %u\n",
         seqpos,nchan,csize,sizeof(card->seq));
       return 1;
     }
@@ -243,7 +243,7 @@ int finish566seq(xy566* card)
   }while(nfirst);
 
   if(seqpos==0){
-    errlogPrintf("Card %d defines no samples?!?\n",card->id);
+    printf("Card %d defines no samples?!?\n",card->id);
     return 1;
   }
 
@@ -258,23 +258,23 @@ int finish566seq(xy566* card)
     card->dlen[i]=bfirst->nsamples;
     card->data[i]=calloc(bfirst->nsamples,sizeof(epicsUInt16));
     if(!card->data[i]){
-      errlogPrintf("Out of memory!!!\n");
+      printf("Out of memory!!!\n");
       return 1;
     }
   }
 
   if(dbg566>0){
-    errlogPrintf("Sequence for card %d\n",card->id);
+    printf("Sequence for card %d\n",card->id);
     for(i=0;i<sizeof(card->seq);i++){
       if(i%16==0)
-        errlogPrintf("%02x: ",i);
-      errlogPrintf("%02x",card->seq[i]);
+        printf("%02x: ",i);
+      printf("%02x",card->seq[i]);
       if(i%16==15)
-        errlogPrintf("\n");
+        printf("\n");
       else if(i%4==3)
-        errlogPrintf(" ");
+        printf(" ");
       if(card->seq[i]&SEQ_END){
-        errlogPrintf("\n");
+        printf("\n");
         break;
       }
     }

@@ -102,7 +102,7 @@ long read_input(biRecord* prec)
   val=*(priv->base+XY240_PORT(port));
 
   if(dbg240>1)
-    errlogPrintf("%lx read %02x ",(unsigned long)prec,val);
+    printf("%lx read %02x ",(unsigned long)prec,val);
 
   epicsMutexUnlock(priv->guard);
 
@@ -133,7 +133,7 @@ long write_output(boRecord* prec)
   val=*(priv->base+XY240_PORT(port));
 
   if(dbg240>0)
-    errlogPrintf("%lx read %02x ",(unsigned long)prec,val);
+    printf("%lx read %02x ",(unsigned long)prec,val);
 
   if(prec->rval)
     val|=mask;
@@ -141,7 +141,7 @@ long write_output(boRecord* prec)
     val&=~mask;
 
   if(dbg240>0)
-    errlogPrintf("write %02x\n",val);
+    printf("write %02x\n",val);
 
   *(priv->base+XY240_PORT(port))=val;
 
@@ -169,7 +169,7 @@ long write_portdir(boRecord* prec)
   val=*(priv->base+XY240_DIR);
 
   if(dbg240>0)
-    errlogPrintf("%lx dir read %02x ",(unsigned long)prec,val);
+    printf("%lx dir read %02x ",(unsigned long)prec,val);
 
   if(prec->rval)
     val|=mask;
@@ -177,7 +177,7 @@ long write_portdir(boRecord* prec)
     val&=~mask;
 
   if(dbg240>0)
-    errlogPrintf("write %02x\n",val);
+    printf("write %02x\n",val);
 
   *(priv->base+XY240_DIR)=val;
 
@@ -236,7 +236,7 @@ xycom240setup(int id,int base)
   volatile epicsUInt8 **ba;
 
   if(!card){
-    errlogPrintf("Allocation failed\n");
+    printf("Allocation failed\n");
     return;
   }
 
@@ -245,13 +245,13 @@ xycom240setup(int id,int base)
   ba=&card->base;
 
   if(devBusToLocalAddr(atVMEA16, card->base_addr, (volatile void **)ba)){
-    errlogPrintf("Failed to map %lx for card %x\n",(unsigned long)card->base,id);
+    printf("Failed to map %lx for card %x\n",(unsigned long)card->base,id);
     free(card);
     return;
   }
 
   if(devReadProbe(1, card->base+XY240_ID, &junk)){
-    errlogPrintf("Failed to read %lx for card %x\n",(unsigned long)(card->base+XY240_ID),id);
+    printf("Failed to read %lx for card %x\n",(unsigned long)(card->base+XY240_ID),id);
     free(card);
     return;
   }
@@ -261,7 +261,7 @@ xycom240setup(int id,int base)
   card->guard=epicsMutexMustCreate();
 
   if(dbg240>0)
-    errlogPrintf("%d mapped %lx as %lx\n",id,(unsigned long)card->base,(unsigned long)card->base);
+    printf("%d mapped %lx as %lx\n",id,(unsigned long)card->base,(unsigned long)card->base);
 
   ellAdd(&xy240s,&card->node);
   return;

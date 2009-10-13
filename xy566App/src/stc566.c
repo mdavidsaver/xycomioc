@@ -163,7 +163,7 @@ stc566simple(int id, int div, int period)
   volatile epicsUInt16 *data;
 
   if(!card){
-    errlogPrintf("Invalid ID\n");
+    printf("Invalid ID\n");
     card->fail=1;
     return;
   }
@@ -171,13 +171,13 @@ stc566simple(int id, int div, int period)
   if(card->fail) return;
 
   if(div<1 || div>16){
-    errlogPrintf("STC divider out of range (1->16)\n");
+    printf("STC divider out of range (1->16)\n");
     card->fail=1;
     return;
   }
 
   if(period<1 || period>0xffff){
-    errlogPrintf("STC period out of range (1->0xffff)\n");
+    printf("STC period out of range (1->0xffff)\n");
     card->fail=1;
     return;
   }

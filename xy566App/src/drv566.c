@@ -43,32 +43,32 @@ xycom566setup(
   epicsUInt16 junk;
 
   if(cbase<0 || cbase>0xffff){
-    errlogPrintf("config (A16) out of range\n");
+    printf("config (A16) out of range\n");
     return;
   }
   if(dbase<0 || dbase>0xffffff){
-    errlogPrintf("data (A24) out of range\n");
+    printf("data (A24) out of range\n");
     return;
   }
 
   if(level<0 || level>7){
-    errlogPrintf("Level out of range (0->7)\n");
+    printf("Level out of range (0->7)\n");
     return;
   }
   if(vec<0 || vec>0xff){
-    errlogPrintf("Vector out of range (0->255)\n");
+    printf("Vector out of range (0->255)\n");
     return;
   }
 
   card=get566(id);
   if(!!card){
-    errlogPrintf("ID %d already exists\n",id);
+    printf("ID %d already exists\n",id);
     return;
   }
 
   card=malloc(sizeof(xy566));
   if(!card){
-    errlogPrintf("Out of memory!\n");
+    printf("Out of memory!\n");
     return;
   }
 
@@ -93,25 +93,25 @@ xycom566setup(
   db=&card->data_base;
 
   if(devBusToLocalAddr(atVMEA16, card->base_addr, (volatile void **)cb)){
-    errlogPrintf("Failed to map A16 %lx for card %x\n", (unsigned long)card->base_addr,id);
+    printf("Failed to map A16 %lx for card %x\n", (unsigned long)card->base_addr,id);
     free(card);
     return;
   }
 
   if(devBusToLocalAddr(atVMEA24, card->data_addr, (volatile void **)db)){
-    errlogPrintf("Failed to map A24 %lx for card %x\n", (unsigned long)card->data_base,id);
+    printf("Failed to map A24 %lx for card %x\n", (unsigned long)card->data_base,id);
     free(card);
     return;
   }
 
   if(devReadProbe(2, card->base+XY566_CSR, &junk)){
-    errlogPrintf("Failed to read A16 %lx for card %x\n", (unsigned long)(card->base+XY566_CSR),id);
+    printf("Failed to read A16 %lx for card %x\n", (unsigned long)(card->base+XY566_CSR),id);
     free(card);
     return;
   }
 
   if(devReadProbe(2, card->data_base, &junk)){
-    errlogPrintf("Failed to read A24 %lx for card %x\n", (unsigned long)(card->base+XY566_CSR),id);
+    printf("Failed to read A24 %lx for card %x\n", (unsigned long)(card->base+XY566_CSR),id);
     free(card);
     return;
   }
@@ -160,18 +160,18 @@ xycom566finish(void)
 
     if(!card->fail){
       if(!!finish566seq(card)){
-        errlogPrintf("Board #%d failed to generate samping sequence and will not be used\n",card->id);
+        printf("Board #%d failed to generate samping sequence and will not be used\n",card->id);
         card->fail=1;
       }
     }
     
     if(!card->clk_div){
-      errlogPrintf("Board #%d STC not initialized and will not be used\n",card->id);
+      printf("Board #%d STC not initialized and will not be used\n",card->id);
       card->fail=1;
     }
 
     if(!!card->fail){
-      errlogPrintf("Board #%d failed to initialize and will not be used\n",card->id);
+      printf("Board #%d failed to initialize and will not be used\n",card->id);
 
       /* Reset the board again and
        * turn off the LEDS to indicate failure
@@ -260,7 +260,7 @@ void xycom566isrcb(CALLBACK *cb)
      * the pointer, or changed by an outside program
      */
     dcnt=256;
-    errlogPrintf("Data longer then expected\n");
+    printf("Data longer then expected\n");
   }
 
   for(i=0;i<dcnt;i++){

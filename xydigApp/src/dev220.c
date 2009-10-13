@@ -89,7 +89,7 @@ long write_output(boRecord* prec)
   val=*(priv->base+XY220_PORT(port));
 
   if(dbg220>0)
-    errlogPrintf("%lx read %02x ",(unsigned long)prec,val);
+    printf("%lx read %02x ",(unsigned long)prec,val);
 
   if(prec->rval)
     val|=mask;
@@ -97,7 +97,7 @@ long write_output(boRecord* prec)
     val&=~mask;
 
   if(dbg220>0)
-    errlogPrintf("write %02x\n",val);
+    printf("write %02x\n",val);
 
   *(priv->base+XY220_PORT(port))=val;
 
@@ -134,7 +134,7 @@ xycom220setup(int id,int base)
   volatile epicsUInt8 **ba;
 
   if(!card){
-    errlogPrintf("Allocation failed\n");
+    printf("Allocation failed\n");
     return;
   }
 
@@ -143,13 +143,13 @@ xycom220setup(int id,int base)
   ba=&card->base;
 
   if(devBusToLocalAddr(atVMEA16, card->base_addr, (volatile void **)ba)){
-    errlogPrintf("Failed to map %lx for card %x\n",(unsigned long)card->base,id);
+    printf("Failed to map %lx for card %x\n",(unsigned long)card->base,id);
     free(card);
     return;
   }
 
   if(devReadProbe(1, card->base+XY220_ID, &junk)){
-    errlogPrintf("Failed to read %lx for card %x\n",(unsigned long)(card->base+XY220_ID),id);
+    printf("Failed to read %lx for card %x\n",(unsigned long)(card->base+XY220_ID),id);
     free(card);
     return;
   }
@@ -159,7 +159,7 @@ xycom220setup(int id,int base)
   card->guard=epicsMutexMustCreate();
 
   if(dbg220>0)
-    errlogPrintf("%d mapped %lx as %lx\n",id,(unsigned long)card->base,(unsigned long)card->base);
+    printf("%d mapped %lx as %lx\n",id,(unsigned long)card->base,(unsigned long)card->base);
 
   ellAdd(&xy220s,&card->node);
   return;
