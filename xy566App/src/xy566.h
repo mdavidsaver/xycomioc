@@ -130,6 +130,9 @@ void
 stc566simple(int id, int div, int period);
 
 void
+stc566seqmulti(int id, int div, int sampper,int seqper);
+
+void
 seq566set(int id, int ch, int nsamp, int ord, int prio, int stop);
 
 #endif /* XY566_H_INC */

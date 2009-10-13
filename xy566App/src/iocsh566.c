@@ -50,6 +50,22 @@ static void stc566simpleCallFunc(const iocshArgBuf *args)
     stc566simple(args[0].ival,args[1].ival,args[2].ival);
 }
 
+/* stc566seqmulti */
+static const iocshArg stc566seqmultiArg0 = { "Card id #",iocshArgInt};
+static const iocshArg stc566seqmultiArg1 = { "STC clock divider (1->16)",iocshArgInt};
+static const iocshArg stc566seqmultiArg2 = { "Sample period in multiples of 0.25us * div (1->0xffff)",iocshArgInt};
+static const iocshArg stc566seqmultiArg3 = { "Sequence period in multiples of 0.25us * div (1->0xffff)",iocshArgInt};
+static const iocshArg * const stc566seqmultiArgs[4] =
+{
+    &stc566seqmultiArg0,&stc566seqmultiArg1,&stc566seqmultiArg2,&stc566seqmultiArg3
+};
+static const iocshFuncDef stc566seqmultiFuncDef =
+    {"stc566seqmulti",4,stc566seqmultiArgs};
+static void stc566seqmultiCallFunc(const iocshArgBuf *args)
+{
+    stc566seqmulti(args[0].ival,args[1].ival,args[2].ival,args[3].ival);
+}
+
 /* seq566set */
 static const iocshArg seq566setArg0 = { "Card id #",iocshArgInt};
 static const iocshArg seq566setArg1 = { "Channel number (0->16 or 32)",iocshArgInt};
@@ -76,6 +92,7 @@ void register566(void)
   iocshRegister(&xycom566setupFuncDef,xycom566setupCallFunc);
   iocshRegister(&xycom566finishFuncDef,xycom566finishCallFunc);
   iocshRegister(&stc566simpleFuncDef,stc566simpleCallFunc);
+  iocshRegister(&stc566seqmultiFuncDef,stc566seqmultiCallFunc);
   iocshRegister(&seq566setFuncDef,seq566setCallFunc);
 }
 epicsExportRegistrar(register566);
