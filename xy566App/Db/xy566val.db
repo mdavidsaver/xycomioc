@@ -1,7 +1,0 @@
-
-record(ai, "$(P)$(CH)") {
-  field( DTYP, "XYCOM 566")
-  field( SCAN, "I/O Intr")
-  field( INP , "#C$(C) S$(N) @")
-}
-

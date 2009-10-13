@@ -1,7 +1,7 @@
 
-record(mbbo, "$(P)$(CH)gain") {
+record(mbbo, "$(P)%(CH)s:gain") {
   field( DTYP, "XYCOM 566 Gain")
-  field( OUT , "#C$(C) S$(N) @")
+  field( OUT , "#C$(C) S%(N)s @")
   field( ZRST, "Gain A")
   field( ONST, "Gain B")
   field( TWST, "Gain C")
@@ -14,4 +14,3 @@ record(mbbo, "$(P)$(CH)gain") {
   field( VAL , 0 )
   field( PINI, "YES")
 }
-

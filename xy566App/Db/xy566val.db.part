@@ -1,0 +1,7 @@
+
+record(ai, "$(P)%(CH)s") {
+  field( DESC, "Card $(C) channel %(N)s")
+  field( DTYP, "XYCOM 566")
+  field( SCAN, "I/O Intr")
+  field( INP , "#C$(C) S%(N)s @")
+}

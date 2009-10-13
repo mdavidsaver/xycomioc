@@ -1,0 +1,32 @@
+
+# The Xycom 566 is a 16 or 32 channel ADC
+# card
+#
+# This configuration is for the INFN Legnaro
+# Beam Profile Monitor IOCs
+#
+# Channels #1-#4 are multiplexed 40 wire screens (wareform)
+# Channels #5-#6 are Faraday cups (single ai)
+#
+
+FILE "../xy566base.db.part"
+TOKENS JUNK
+1
+CLOSE
+
+FILE "../xy566gain.db.part"
+FILE "../xy566wave.db.part"
+
+TOKENS CH,  N, L
+ch1,  0,  40
+ch2,  1,  40
+ch3,  2,  40
+ch4,  3,  40
+
+CLOSE "../xy566wave.db.part"
+FILE "../xy566val.db.part"
+
+ch5,  4,  1
+ch6,  5,  1
+
+CLOSE
