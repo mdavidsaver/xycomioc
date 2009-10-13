@@ -113,7 +113,6 @@ try:
 
       inpf[infile]=xf.read()
       xf.close()
-      tokens=None
       continue
 
     if len(inpf)==0:
@@ -121,8 +120,9 @@ try:
 
     pm=pstop.match(l)
     if pm is not None:
-      sfile=fm.groups()
-      if sfile not in inpf:
+      sfile=pm.groups()[0]
+
+      if sfile not in inpf.keys():
         filerr('%s is not open'% sfile)
 
       del inpf[sfile]
