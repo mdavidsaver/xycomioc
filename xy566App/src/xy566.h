@@ -36,6 +36,8 @@
 #define XY566_SRB 0x201 /* Seqence ram base */
 #define XY566_SEQR(N) ( XY566_SRB + 2*(N) )
 
+#define XY566_DOFF(N) ( (N) ) /* Data ram offset of N sample */
+
 
 /* Special bits in sequence ram */
 #define SEQ_IRQ (1<<5)

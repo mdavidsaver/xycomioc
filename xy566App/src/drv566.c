@@ -266,7 +266,7 @@ void xycom566isrcb(CALLBACK *cb)
   for(i=0;i<dcnt;i++){
     ch=card->seq[i]&0x1f;
 
-    card->data[ch][datacnt[ch]]=READ16(card->data_base+2*i);
+    card->data[ch][datacnt[ch]]=READ16(card->data_base+XY566_DOFF(i));
     datacnt[ch]++;
 
     if( card->seq[i]&SEQ_END )
