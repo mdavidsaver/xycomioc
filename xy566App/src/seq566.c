@@ -44,12 +44,14 @@ typedef struct {
 
   size_t order;
   size_t priority;
+  
+  size_t stop;
 } seqent;
 
 #define node2seqent(n) ( (seqent*)(n) )
 
 void
-seq566set(int id, int ch, int nsamp, int ord, int prio)
+seq566set(int id, int ch, int nsamp, int ord, int prio, int stop)
 {
   xy566 *card=get566(id);
   ELLNODE *node, *prev;
@@ -76,6 +78,12 @@ seq566set(int id, int ch, int nsamp, int ord, int prio)
      * on what other channels are used
      */
     printf("Invalid number of samples\n");
+    card->fail=1;
+    return;
+  }
+
+  if(stop<0 || stop>nsamp){
+    printf("Stop sample must be between 0 and %u\n",nsamp);
     card->fail=1;
     return;
   }
@@ -145,6 +153,7 @@ seq566set(int id, int ch, int nsamp, int ord, int prio)
   ent->nsamples=nsamp;
   ent->order=ord;
   ent->priority=prio;
+  ent->stop=stop;
 
   /* Inserts between prev and node */
   ellInsert(&card->seq_ctor, prev, &ent->node);
@@ -168,9 +177,10 @@ int finish566seq(xy566* card)
         nfirst=ellNext(nfirst)
     ){
       bfirst=node2seqent(nfirst);
-      printf("Ch %u (%u) %u:%u\n",
+      printf("Ch %u (%u) %u:%u S%u\n",
         bfirst->channel,bfirst->nsamples,
-        bfirst->order,bfirst->priority
+        bfirst->order,bfirst->priority,
+        bfirst->stop
       );
     }
     bfirst=NULL;
@@ -234,6 +244,10 @@ int finish566seq(xy566* card)
       bfirst=node2seqent(nfirst);
       for(j=0; j<csize; j++){
         card->seq[seqpos + i + j*nchan]=bfirst->channel;
+
+        if(!!bfirst->stop && j==(bfirst->stop-1)){
+          card->seq[seqpos + i + j*nchan]|=SEQ_STP;
+        }
       }
     }
     seqpos+=nchan*csize;

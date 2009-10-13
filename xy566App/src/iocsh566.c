@@ -56,16 +56,18 @@ static const iocshArg seq566setArg1 = { "Channel number (0->16 or 32)",iocshArgI
 static const iocshArg seq566setArg2 = { "Number of samples (>0)",iocshArgInt};
 static const iocshArg seq566setArg3 = { "Order #",iocshArgInt};
 static const iocshArg seq566setArg4 = { "Priority",iocshArgInt};
-static const iocshArg * const seq566setArgs[5] =
+static const iocshArg seq566setArg5 = { "Stop sample (1->#samples)",iocshArgInt};
+static const iocshArg * const seq566setArgs[6] =
 {
-    &seq566setArg0,&seq566setArg1,&seq566setArg2,&seq566setArg3,&seq566setArg4
+    &seq566setArg0,&seq566setArg1,&seq566setArg2,&
+    seq566setArg3,&seq566setArg4,&seq566setArg5
 };
 static const iocshFuncDef seq566setFuncDef =
-    {"seq566set",5,seq566setArgs};
+    {"seq566set",6,seq566setArgs};
 static void seq566setCallFunc(const iocshArgBuf *args)
 {
     seq566set(args[0].ival,args[1].ival,args[2].ival,
-              args[3].ival,args[4].ival);
+              args[3].ival,args[4].ival,args[5].ival);
 }
 
 static
