@@ -4,10 +4,13 @@ xytest_registerRecordDeviceDriver(pdbbase)
 
 dbg566 = 2
 
-xycom566setup(1, 0xf800, 0xa00000, 3, 0xf2, 1)
-xycom566setup(2, 0xf400, 0xb00000, 3, 0xe0, 1)
+############## 240 DIO card ##################
+
+xycom240setup(3,0xe000)
 
 ############### ADC card 1 ####################
+
+xycom566setup(1, 0xf800, 0xa00000, 3, 0xf2, 1)
 
 #stc566simple(1, 2, 0x100)
 stc566seqmulti(1, 2, 0x100, 0x4800)
@@ -27,6 +30,8 @@ seq566set(1, 5, 1, 6, 1)
 
 ############### ADC card 2 ####################
 
+xycom566setup(2, 0xf400, 0xb00000, 3, 0xe0, 1)
+
 #stc566simple(2, 2, 0x100)
 stc566seqmulti(2, 2, 0x100, 0x4800)
 
@@ -45,7 +50,11 @@ seq566set(2, 5, 1, 6, 1)
 
 xycom566finish()
 
+################# Records ###################
+
 dbLoadRecords("db/xy566lnl.db","P=spec:adc1:,C=1")
 dbLoadRecords("db/xy566lnl.db","P=spec:adc2:,C=2")
+
+dbLoadRecords("db/xy240.db","P=spec:dio1:,C=3")
 
 iocInit()
