@@ -9,7 +9,7 @@
 #  define X220_CSR_RED 0x01 /* 0=on 1=off */
 #  define X220_CSR_GRN 0x02 /* 0=of 1=on */
 #  define X220_CSR_RST 0x10 /* Reset */
-#define  U8_XY220_PORT_0	0x81
+#define  U8_XY220_PORT_0	0x82
 /* 0 <= N <= 4 */
 #define  U8_XY220_PORT(N) ( U8_XY220_PORT_0 + (N) )
 #  define XY220_NPORTS 4
