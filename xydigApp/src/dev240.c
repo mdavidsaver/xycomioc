@@ -18,6 +18,8 @@
 #include <biRecord.h>
 #include <boRecord.h>
 
+#include <regaccess.h>
+
 #include "xy240.h"
 
 /* per device struct */
@@ -105,10 +107,10 @@ long read_input(biRecord* prec)
 
   epicsMutexMustLock(priv->guard);
 
-  val=*(priv->base+XY240_PORT(port));
+  val=READ8(priv->base, XY240_PORT(port));
 
   if(dbg240>1)
-    printf("%lx read %02x ",(unsigned long)prec,val);
+    printf("%lx read %02x\n",(unsigned long)prec,val);
 
   epicsMutexUnlock(priv->guard);
 
@@ -136,7 +138,7 @@ long write_output(boRecord* prec)
 
   epicsMutexMustLock(priv->guard);
 
-  val=*(priv->base+XY240_PORT(port));
+  val=READ8(priv->base, XY240_PORT(port));
 
   if(dbg240>0)
     printf("%lx read %02x ",(unsigned long)prec,val);
@@ -149,7 +151,7 @@ long write_output(boRecord* prec)
   if(dbg240>0)
     printf("write %02x\n",val);
 
-  *(priv->base+XY240_PORT(port))=val;
+  WRITE8(priv->base, XY240_PORT(port), val);
 
   epicsMutexUnlock(priv->guard);
 
@@ -172,7 +174,7 @@ long write_portdir(boRecord* prec)
 
   epicsMutexMustLock(priv->guard);
 
-  val=*(priv->base+XY240_DIR);
+  val=READ8(priv->base, XY240_DIR);
 
   if(dbg240>0)
     printf("%lx dir read %02x ",(unsigned long)prec,val);
@@ -185,7 +187,7 @@ long write_portdir(boRecord* prec)
   if(dbg240>0)
     printf("write %02x\n",val);
 
-  *(priv->base+XY240_DIR)=val;
+  WRITE8(priv->base, XY240_DIR, val);
 
   epicsMutexUnlock(priv->guard);
 
@@ -256,13 +258,14 @@ xycom240setup(int id,int base)
     return;
   }
 
-  if(devReadProbe(1, card->base+XY240_ID, &junk)){
-    printf("Failed to read %lx for card %x\n",(unsigned long)(card->base+XY240_ID),id);
+  if(devReadProbe(1, card->base+U8_XY240_ID, &junk)){
+    printf("Failed to read %lx for card %x\n",(unsigned long)(card->base+U8_XY240_ID),id);
     free(card);
     return;
   }
 
-  *(card->base+XY240_CSR)=X240_CSR_RED|X240_CSR_GRN;
+  WRITE8(card->base, XY240_CSR, X240_CSR_RST);
+  WRITE8(card->base, XY240_CSR, X240_CSR_RED|X240_CSR_GRN);
 
   card->guard=epicsMutexMustCreate();
 

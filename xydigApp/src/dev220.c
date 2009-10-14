@@ -19,6 +19,8 @@
 
 #include "xy220.h"
 
+#include <regaccess.h>
+
 /* per device struct */
 typedef struct {
   ELLNODE node; /* must be first */
@@ -92,7 +94,7 @@ long write_output(boRecord* prec)
 
   epicsMutexMustLock(priv->guard);
 
-  val=*(priv->base+XY220_PORT(port));
+  val=READ8(priv->base, XY220_PORT(port));
 
   if(dbg220>0)
     printf("%lx read %02x ",(unsigned long)prec,val);
@@ -105,7 +107,7 @@ long write_output(boRecord* prec)
   if(dbg220>0)
     printf("write %02x\n",val);
 
-  *(priv->base+XY220_PORT(port))=val;
+  WRITE8(priv->base, XY220_PORT(port), val);
 
   epicsMutexUnlock(priv->guard);
 
@@ -154,13 +156,14 @@ xycom220setup(int id,int base)
     return;
   }
 
-  if(devReadProbe(1, card->base+XY220_ID, &junk)){
-    printf("Failed to read %lx for card %x\n",(unsigned long)(card->base+XY220_ID),id);
+  if(devReadProbe(1, card->base+U8_XY220_ID, &junk)){
+    printf("Failed to read %lx for card %x\n",(unsigned long)(card->base+U8_XY220_ID),id);
     free(card);
     return;
   }
 
-  *(card->base+XY220_CSR)=X220_CSR_RED|X220_CSR_GRN;
+  WRITE16(card->base, XY220_CSR, X220_CSR_RST);
+  WRITE16(card->base, XY220_CSR, X220_CSR_RED|X220_CSR_GRN);
 
   card->guard=epicsMutexMustCreate();
 

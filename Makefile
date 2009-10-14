@@ -12,6 +12,8 @@ $(foreach dir, $(filter-out configure,$(DIRS)),$(eval $(call DIR_template,$(dir)
 
 iocBoot_DEPEND_DIRS += $(filter %App,$(DIRS))
 
+xydigApp_DEPEND_DIRS += accessApp
+
 xy566App_DEPEND_DIRS += accessApp
 
 xytestApp_DEPEND_DIRS += xy566App xydigApp
