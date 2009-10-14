@@ -292,8 +292,3 @@ void xycom566isrcb(CALLBACK *cb)
 
   epicsMutexUnlock(card->guard);
 }
-
-/*********************** DRVET ************************/
-
-drvet drvXycom566 = {2, NULL, NULL};
-epicsExportAddress(drvet,drvXycom566);
