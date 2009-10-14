@@ -8,6 +8,10 @@ dbg566 = 2
 
 xycom240setup(3,0xe000)
 
+############## 220 DO card ##################
+
+xycom220setup(4,0x3000)
+
 ############### ADC card 1 ####################
 
 xycom566setup(1, 0xf800, 0xa00000, 3, 0xf2, 1)
@@ -56,5 +60,7 @@ dbLoadRecords("db/xy566lnl.db","P=spec:adc1:,C=1")
 dbLoadRecords("db/xy566lnl.db","P=spec:adc2:,C=2")
 
 dbLoadRecords("db/xy240.db","P=spec:dio1:,C=3")
+
+dbLoadRecords("db/xy220.db","P=spec:do1:,C=4")
 
 iocInit()
