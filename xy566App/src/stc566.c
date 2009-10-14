@@ -50,8 +50,8 @@ static
 void
 stcreset(xy566 *card, int div)
 {
-  volatile epicsUInt8 *ctrl=card->base+XY566_STC;
-  volatile epicsUInt16 *data=(volatile epicsUInt16*)(card->base+XY566_STD);
+  volatile epicsUInt8 *ctrl=card->base+U8_XY566_STC;
+  volatile epicsUInt16 *data=(volatile epicsUInt16*)(card->base+U16_XY566_STD);
   epicsUInt16 mmreg=0;
 
   *ctrl=0xff; /* Reset */
@@ -110,8 +110,8 @@ static
 void
 stcdisable(xy566 *card, int chan)
 {
-  volatile epicsUInt8 *ctrl=card->base+XY566_STC;
-  volatile epicsUInt16 *data=(volatile epicsUInt16*)(card->base+XY566_STD);
+  volatile epicsUInt8 *ctrl=card->base+U8_XY566_STC;
+  volatile epicsUInt16 *data=(volatile epicsUInt16*)(card->base+U16_XY566_STD);
 
   /* Disable channel */
   *ctrl = 0xC0 | (1<<chan);
@@ -184,8 +184,8 @@ stc566simple(int id, int div, int period)
 
   epicsMutexMustLock(card->guard);
 
-  ctrl=card->base+XY566_STC;
-  data=(volatile epicsUInt16*)(card->base+XY566_STD);
+  ctrl=card->base+U8_XY566_STC;
+  data=(volatile epicsUInt16*)(card->base+U16_XY566_STD);
 
   stcreset(card,div);
   STCNOOP;
@@ -298,8 +298,8 @@ stc566seqmulti(int id, int div, int sampper,int seqper)
 
   epicsMutexMustLock(card->guard);
 
-  ctrl=card->base+XY566_STC;
-  data=(volatile epicsUInt16*)(card->base+XY566_STD);
+  ctrl=card->base+U8_XY566_STC;
+  data=(volatile epicsUInt16*)(card->base+U16_XY566_STD);
 
   stcreset(card,div);
   STCNOOP;

@@ -15,6 +15,8 @@
 
 #include <epicsExport.h>
 
+#include <regaccess.h>
+
 #include "xy566.h"
 
 int dbg566=0;
@@ -105,24 +107,24 @@ xycom566setup(
     return;
   }
 
-  if(devReadProbe(2, card->base+XY566_CSR, &junk)){
-    printf("Failed to read A16 %lx for card %x\n", (unsigned long)(card->base+XY566_CSR),id);
+  if(devReadProbe(2, card->base+U16_XY566_CSR, &junk)){
+    printf("Failed to read A16 %lx for card %x\n", (unsigned long)(card->base+U16_XY566_CSR),id);
     free(card);
     return;
   }
 
   if(devReadProbe(2, card->data_base, &junk)){
-    printf("Failed to read A24 %lx for card %x\n", (unsigned long)(card->base+XY566_CSR),id);
+    printf("Failed to read A24 %lx for card %x\n", (unsigned long)(card->data_base),id);
     free(card);
     return;
   }
 
-  WRITE16(card->base+XY566_CSR, XY566_SWS); /* Reset */
+  WRITE16(card->base, XY566_CSR, XY566_CSR_RST); /* Reset */
   /* turn on green and red to indicate init start */
-  WRITE16(card->base+XY566_CSR, XY566_CSR_GRN);
+  WRITE16(card->base, XY566_CSR, XY566_CSR_GRN);
 
-  WRITE16(card->base+XY566_RAM, 0);
-  WRITE8(card->base+XY566_SEQ, 0);
+  WRITE16(card->base, XY566_RAM, 0);
+  WRITE8(card->base, XY566_SEQ, 0);
 
   card->guard=epicsMutexMustCreate();
   scanIoInit(&card->seq_irq);
@@ -130,7 +132,7 @@ xycom566setup(
   callbackSetPriority(priorityHigh, &card->cb_irq);
   callbackSetUser(card, &card->cb_irq);
 
-  WRITE8(card->base+XY566_VEC, vec);
+  WRITE8(card->base, XY566_VEC, vec);
 
   devEnableInterruptLevelVME(level);
   assert(devConnectInterruptVME(vec, xycom566isr, card)==0);
@@ -141,7 +143,7 @@ xycom566setup(
    * 16 bit conversion (default)
    * sequence controller disable (will be enabled during drvsup init)
    */
-  WRITE16(card->base+XY566_CSR,
+  WRITE16(card->base, XY566_CSR,
     XY566_CSR_GRN);
 
   ellAdd(&xy566s,&card->node);
@@ -177,19 +179,19 @@ xycom566finish(void)
       /* Reset the board again and
        * turn off the LEDS to indicate failure
        */
-      WRITE16(card->base+XY566_CSR, XY566_SWS);
-      WRITE16(card->base+XY566_CSR, XY566_CSR_RED);
+      WRITE16(card->base, XY566_CSR, XY566_CSR_RST);
+      WRITE16(card->base, XY566_CSR, XY566_CSR_RED);
       return;
 
     }
     
-    WRITE16(card->base+XY566_RAM, 0);
-    WRITE8(card->base+XY566_SEQ, 0);
+    WRITE16(card->base, XY566_RAM, 0);
+    WRITE8(card->base, XY566_SEQ, 0);
 
-    csr=READ16(card->base+XY566_CSR);
+    csr=READ16(card->base, XY566_CSR);
     csr|=XY566_CSR_SEQ|XY566_CSR_INA|XY566_CSR_SIE;
     csr|=XY566_CSR_RED|XY566_CSR_GRN;
-    WRITE16(card->base+XY566_CSR, csr);
+    WRITE16(card->base, XY566_CSR, csr);
   }
 
   return;
@@ -215,12 +217,12 @@ void xycom566isr(void *arg)
 {
   xy566 *card=arg;
   epicsUInt16 csr;
-  csr=READ16(card->base+XY566_CSR);
+  csr=READ16(card->base, XY566_CSR);
   if(!(csr&XY566_CSR_PND))
     return; /* not ours */
 
   if(card->use_seq_clk)
-    WRITE8(card->base+XY566_STC, 0xC2); /* Disarm Seq. trig clock */
+    WRITE8(card->base, XY566_STC, 0xC2); /* Disarm Seq. trig clock */
   
   /* Disable sequence controller, acknowledge
    * interrupts, and schedule further processing
@@ -233,7 +235,7 @@ void xycom566isr(void *arg)
    * interrupts
    */
 
-  WRITE16(card->base+XY566_CSR, csr);
+  WRITE16(card->base, XY566_CSR, csr);
 
   callbackRequest(&card->cb_irq);
 
@@ -257,7 +259,7 @@ void xycom566isrcb(CALLBACK *cb)
   memset(datacnt,0,sizeof(datacnt));
 
   /* number of samples taken */
-  dcnt=READ16(card->base+XY566_RAM);
+  dcnt=READ16(card->base, XY566_RAM);
 
   if(dcnt>256){
     /* Somehow the sequence was restart w/o resetting
@@ -270,7 +272,7 @@ void xycom566isrcb(CALLBACK *cb)
   for(i=0;i<dcnt;i++){
     ch=card->seq[i]&0x1f;
 
-    card->data[ch][datacnt[ch]]=READ16(card->data_base+XY566_DOFF(i));
+    card->data[ch][datacnt[ch]]=READ16(card->data_base, XY566_DOFF(i));
     datacnt[ch]++;
 
     if( card->seq[i]&SEQ_END )
@@ -278,15 +280,15 @@ void xycom566isrcb(CALLBACK *cb)
   }
   
   /* reset pointers */
-  WRITE16(card->base+XY566_RAM, 0);
-  WRITE8(card->base+XY566_SEQ, 0);
+  WRITE16(card->base, XY566_RAM, 0);
+  WRITE8(card->base, XY566_SEQ, 0);
 
-  csr=READ16(card->base+XY566_CSR);
+  csr=READ16(card->base, XY566_CSR);
 
   /* enable sequence controller */
   csr|=XY566_CSR_SEQ;
 
-  WRITE16(card->base+XY566_CSR, csr);
+  WRITE16(card->base, XY566_CSR, csr);
 
   scanIoRequest(card->seq_irq);
 

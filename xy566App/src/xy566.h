@@ -8,7 +8,7 @@
 #include <epicsMutex.h>
 #include <callback.h>
 
-#define XY566_CSR 0x80
+#define U16_XY566_CSR 0x80
 #  define XY566_CSR_RED 0x0001
 #  define XY566_CSR_GRN 0x0002
 #  define XY566_CSR_PND 0x0004 /* IRQ pending */
@@ -25,18 +25,18 @@
 #  define XY566_CSR_SIP 0x2000 /* seq. irq pending */
 #  define XY566_CSR_EIE 0x4000 /* evt. irq enable */
 #  define XY566_CSR_EIP 0x8000 /* evt. irq pending */
-#define XY566_SWS 0x82 /* software start */
-#define XY566_VEC 0x83 /* VME IRQ vector */
-#define XY566_RAM 0x84 /* data ram A24 pointer */
-#define XY566_SEQ 0x87 /* sequence ram pointer */
-#define XY566_STD 0xC0 /* STC Data port */
-#define XY566_STC 0xC3 /* STC Control port */
+#define U8_XY566_SWS 0x82 /* software start */
+#define U8_XY566_VEC 0x83 /* VME IRQ vector */
+#define U16_XY566_RAM 0x84 /* data ram A24 pointer */
+#define U8_XY566_SEQ 0x87 /* sequence ram pointer */
+#define U16_XY566_STD 0xC0 /* STC Data port */
+#define U8_XY566_STC 0xC3 /* STC Control port */
 #define XY566_GRB 0x101 /* Gain RAM base */
-#define XY566_GAIN(N) ( XY566_GRB + 2*(N) )
+#define U8_XY566_GAIN(N) ( XY566_GRB + 2*(N) )
 #define XY566_SRB 0x201 /* Seqence ram base */
-#define XY566_SEQR(N) ( XY566_SRB + 2*(N) )
+#define U8_XY566_SEQR(N) ( XY566_SRB + 2*(N) )
 
-#define XY566_DOFF(N) ( (N) ) /* Data ram offset of N sample */
+#define U16_XY566_DOFF(N) ( (N) ) /* Data ram offset of N sample */
 
 
 /* Special bits in sequence ram */
@@ -102,12 +102,6 @@ typedef struct {
 xy566* get566(short id);
 
 int finish566seq(xy566*);
-
-#define WRITE16(addr, val) ( *(volatile epicsUInt16*)(addr) = (val) )
-#define WRITE8(addr, val) ( *(volatile epicsUInt8*)(addr) = (val) )
-
-#define READ16(addr) ( *(volatile epicsUInt16*)(addr) )
-#define READ8(addr) ( *(volatile epicsUInt8*)(addr) )
 
 /* IOCSH stuff */
 

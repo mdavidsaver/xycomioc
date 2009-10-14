@@ -18,6 +18,8 @@
 #include <biRecord.h>
 #include <boRecord.h>
 
+#include <regaccess.h>
+
 #include "xy566.h"
 
 static
@@ -74,7 +76,7 @@ long read_status(biRecord* prec)
 
     epicsMutexMustLock(card->guard);
 
-    csr=READ16(card->base+XY566_CSR);
+    csr=READ16(card->base, XY566_CSR);
 
     prec->rval= csr&XY566_CSR_SRT;
 
@@ -101,10 +103,10 @@ long write_control(boRecord* prec)
       epicsMutexMustLock(card->guard);
     
       if(card->use_seq_clk){
-        WRITE8(card->base+XY566_STC, 0x22); /* Arm Seq. trig clock */
+        WRITE8(card->base, XY566_STC, 0x22); /* Arm Seq. trig clock */
 
       }else{
-        WRITE8(card->base+XY566_SWS, 0); /* Software start */
+        WRITE8(card->base, XY566_SWS, 0); /* Software start */
 
       }
 

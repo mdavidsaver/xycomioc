@@ -17,6 +17,8 @@
 
 #include <mbboRecord.h>
 
+#include <regaccess.h>
+
 #include "xy566.h"
 
 static
@@ -56,9 +58,9 @@ long write_gain(mbboRecord* prec)
   if(chan < 0 || chan > card->nchan)
     return 1;
 
-  WRITE8(card->base+XY566_GAIN(chan), prec->rval);
+  WRITE8(card->base, XY566_GAIN(chan), prec->rval);
 
-  prec->rbv=READ8(card->base+XY566_GAIN(chan));
+  prec->rbv=READ8(card->base, XY566_GAIN(chan));
 
   return 0;
 }

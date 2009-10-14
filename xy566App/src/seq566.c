@@ -8,6 +8,8 @@
 #include <iocsh.h>
 #include <errlog.h>
 
+#include <regaccess.h>
+
 /*
  * XYCOM 566 sampling sequence construction
  *
@@ -297,7 +299,7 @@ int finish566seq(xy566* card)
   /* Actually write to the card */
   
   for(i=0; i<sizeof(card->seq); i++){
-    WRITE8(card->base+XY566_SEQR(i), card->seq[i]);
+    WRITE8(card->base, XY566_SEQR(i), card->seq[i]);
     if(card->seq[i]&SEQ_END)
       break;
   }
