@@ -140,7 +140,7 @@ display {
 	display[3] {
 		label="Ch #4"
 		name="basic.adl"
-		args="R=$(P)run,CH=$(P)ch3,GN=$(P)ch3:gain"
+		args="R=$(P)run,CH=$(P)ch4,GN=$(P)ch4:gain"
 	}
 	clr=14
 	bclr=4
