@@ -1,0 +1,57 @@
+
+There are two difficult areas when working with the 566.
+
+= stc566.c =
+
+The first is the clock configuration.  The timing chip
+has three user programmable counters which serve as
+clocks.
+
+Since this is quite involved and easy to do wrong.
+Several IOCSH functions are provided for standard
+configurations w/ some tunable parameters.
+
+= seq566.c =
+
+The second difficulty is the sampling sequence.  Since
+each card has only one ADC a software controlled
+multiplexer sits in front of it.
+
+This sequence is defined with the seq566set IOCSH
+function.  It accumulates entries in a sorted list,
+which is transformed into the sequence to be written
+to hardware in finish566seq.
+
+= drv566.c =
+
+Card initialization and the interrupt handler.
+
+= iocsh566.c =
+
+Boilerplate for the IOCSH functions found in
+other code units.
+
+= xy566.h =
+
+Definitions for registers, the driver private data
+structure, and prototypes for IOCSH functions.
+
+= devbi566.c =
+
+Device support to command the card to run its sampling
+sequence.
+
+= devmbbo566.c =
+
+A MBBO to set the gain of individual channels.  However,
+the actual values of the gain settings depend on jumper
+settings which can not be read at runtime :-(
+
+= devai566.c =
+
+Allows access to the first sample for a channel.
+Use this mainly when there is only one sample.
+
+= devwf566.c =
+
+Read back a channel's samples as a waveform.

@@ -1,6 +1,15 @@
 
 XYCOM 566 fast analog input card.
 
+Written by:
+
+Michael Davidsaver <mdavidsaver@bnl.gov>
+NSLSII Project
+Brookhaven National Lab.
+
+Fall 2009
+
+
 The 566 is a 32 (unipolar) or 16 (bipolar) channel AI
 card.  It has a single adc with a programmable multiplexer
 to control the sampling of all channels.  The user also
@@ -27,10 +36,20 @@ xycom566setup(
 
  Clock setup
 
+Each card can have only one clock setup, which will be one of
+the following.
+
 stc566simple(
       int id,     Arbitrary id for this card
       int div,    Divider on 4 MHz reference clock
       int period  sample clock period (.25*div*period)
+)
+
+stc566seqmulti(
+      int id,      Arbitrary id for this card
+      int div,     Divider on 4 MHz reference clock
+      int sampper, sample clock period (.25*div*period)
+      int seqper   seqence clock period (.25*div*period)
 )
 
  Sample Sequence construction
@@ -40,7 +59,8 @@ seq566set(
       int ch,     Channel 0-31 or 0-16 as appropriate
       int nsamp,  Number of samples (>1)
       int ord,    Order to sample in (lowest first) (1-32)
-      int prio    Priority disambiguate channels with the same order
+      int prio,   Priority disambiguate channels with the same order
+      int stop    if N>0 then sample N will contain a stop (pause) code
 )
 
 Example
