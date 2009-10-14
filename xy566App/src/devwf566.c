@@ -22,21 +22,31 @@
 static
 long init_record(waveformRecord* prec)
 {
+  long err;
   xy566 *card=get566(prec->inp.value.vmeio.card);
 
   if(!card){
     errMessage(errlogFatal,"card# not associated with a device");
-    return S_dev_noDevice;
+    err=S_dev_noDevice;
+    goto fail;
   }
-  if(!!card->fail)
-    return 1;
+  if(!!card->fail){
+    err=1;
+    goto fail;
+  }
   
-  if(prec->ftvl!=DBF_DOUBLE)
-    return S_db_badDbrtype;
+  if(prec->ftvl!=DBF_DOUBLE){
+    err=S_db_badDbrtype;
+    goto fail;
+  }
 
   prec->dpvt=card;
 
   return 0;
+
+fail:
+  prec->pact=TRUE;
+  return err;
 }
 
 static

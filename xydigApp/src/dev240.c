@@ -39,6 +39,7 @@ epicsExportAddress(int,dbg240);
 static
 long init_rec(dbCommon* prec, DBLINK* lnk)
 {
+  long err;
   xy240 *priv;
   ELLNODE *node;
 
@@ -52,12 +53,17 @@ long init_rec(dbCommon* prec, DBLINK* lnk)
 
   if(!priv){
     errMessage(errlogFatal,"card# not associated with a device");
-    return S_dev_noDevice;
+    err=S_dev_noDevice;
+    goto fail;
   }
 
   prec->dpvt=priv;
 
   return 0;
+
+fail:
+  prec->pact=TRUE;
+  return err;
 }
 
 /********** Inits *********/

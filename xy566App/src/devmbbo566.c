@@ -22,14 +22,18 @@
 static
 long init_record(mbboRecord* prec)
 {
+  long err;
   xy566 *card=get566(prec->out.value.vmeio.card);
 
   if(!card){
     errMessage(errlogFatal,"card# not associated with a device");
-    return S_dev_noDevice;
+    err=S_dev_noDevice;
+    goto fail;
   }
-  if(!!card->fail)
-    return 1;
+  if(!!card->fail){
+    err=1;
+    goto fail;
+  }
 
   prec->dpvt=card;
   prec->nobt=2;
@@ -37,6 +41,10 @@ long init_record(mbboRecord* prec)
   prec->shft=0;
 
   return 0;
+
+fail:
+  prec->pact=TRUE;
+  return err;
 }
 
 static
