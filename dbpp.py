@@ -38,6 +38,12 @@
 # without modification.
 #
 
+#
+# Michael Davidsaver <mdavidsaver@bnl.gov>
+# Brookhaven National Lab.
+# 2009
+#
+
 import sys, re
 from copy import deepcopy
 

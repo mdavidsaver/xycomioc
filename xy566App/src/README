@@ -21,9 +21,9 @@ driver uses only continuous sequence mode.  This is the most
 flexible mode.
 
 
-IOC Shell functions
+= IOC Shell functions =
 
- Device setup
+== Device setup ==
 
 xycom566setup(
       int id,     Arbitrary id for this card
@@ -34,7 +34,11 @@ xycom566setup(
       int bipol   0 - 32 unipolar, 1 - 16 bi polar
 )
 
- Clock setup
+xycom566finish()
+
+Call xycom566finish once before iocInit()
+
+== Clock setup ==
 
 Each card can have only one clock setup, which will be one of
 the following.
@@ -52,7 +56,7 @@ stc566seqmulti(
       int seqper   seqence clock period (.25*div*period)
 )
 
- Sample Sequence construction
+== Sample Sequence construction ==
 
 seq566set(
       int id,     Arbitrary id for this card
@@ -76,4 +80,8 @@ seq566set(1, 6, 10, 1, 2)
 Samples channels 6 and 7 alternately (ie 6,7,6,7,6,7...) for
 a total of 10 samples each.
 
+= Database =
 
+Example databases are generated using the python script dbpp.py.
+This proess is controlled by the .mac files.
+These can either be copied/modified to change the .db.
