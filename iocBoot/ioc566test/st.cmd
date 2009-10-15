@@ -1,4 +1,14 @@
 
+cd "/xycomioc/iocBoot/ioc566test"
+
+< cdCommands
+
+cd topbin
+
+ld < xytest.munch
+
+cd top
+
 dbLoadDatabase("dbd/xytest.dbd")
 xytest_registerRecordDeviceDriver(pdbbase)
 
@@ -64,3 +74,4 @@ dbLoadRecords("db/xy240.db","P=spec:dio1:,C=3")
 dbLoadRecords("db/xy220.db","P=spec:do1:,C=4")
 
 iocInit()
+
