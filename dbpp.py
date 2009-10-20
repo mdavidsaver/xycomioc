@@ -51,15 +51,6 @@ if len(sys.argv)<2:
   print "Usage: dbpp.py <source file>"
   sys.exit(1)
 
-def cleansep(inp):
-  """Seperate a line of tokens or values
-  and clean the individual values
-  """
-  x=inp.split(',')
-  for n in range(len(x)):
-    x[n]=x[n].strip()
-  return x
-
 comment=re.compile('^\W*#\W*')
 empty=re.compile('^\W*$')
 
@@ -77,6 +68,15 @@ f=open(sys.argv[1],'r')
 tokens=None
 line=0
 inpf={}
+
+def cleansep(inp):
+  """Seperate a line of tokens or values
+  and clean the individual values
+  """
+  x=inp.split(',')
+  for n in range(len(x)):
+    x[n]=x[n].strip()
+  return x
 
 def filerr(mesg):
   print >>sys.stderr, 'On line %(line)d of %(file)s: %(mesg)s'% \
@@ -98,18 +98,22 @@ try:
       print l,
       continue
 
+    # quoted string variable
     svm=svar.match(l)
     if svm is not None:
       name, val = svm.groups()
+      # globals can reference other existing globals
       globs[name]=val%globs
       continue
 
+    # unset variable
     rvm=rvar.match(l)
     if rvm is not None:
-      name = svm.groups()
+      name = rvm.groups()[0]
       del globs[name]
       continue
 
+    # open a new file
     fm=ifile.match(l)
     if fm is not None:
       infile=fm.groups()[0]
@@ -122,8 +126,9 @@ try:
       continue
 
     if len(inpf)==0:
-      filerr('expected FILE')
+      filerr('expected FILE: no files open')
 
+    # close named file
     pm=pstop.match(l)
     if pm is not None:
       sfile=pm.groups()[0]
@@ -134,10 +139,12 @@ try:
       del inpf[sfile]
       continue
 
+    # close all open files
     if stop.match(l):
       inpf={}
       continue
 
+    # token specification
     ptm=tokl.match(l)
     if ptm is not None:
       tokens=cleansep(ptm.groups()[0])
@@ -145,7 +152,7 @@ try:
 
     # Must be a values line
     if tokens is None:
-      filerr('expected TOKENS')
+      filerr('expected TOKENS: no tokens specified before a values line')
 
     vals=cleansep(l)
 
@@ -154,10 +161,15 @@ try:
         {'vals':len(vals),'toks':len(tokens)}
       )
 
+    # copy global macros for use in this values line
     macs=deepcopy(globs)
+    # expand each value column in terms of the global macros
+    # and those columns to its left.
     for n in range(len(tokens)):
       macs[tokens[n]]=vals[n]%macs
 
+    # use macros to expand each file
+    # and send to standard out.
     for fn,out in inpf.iteritems():
       infile=fn
       while True:
