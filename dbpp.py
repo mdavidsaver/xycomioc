@@ -44,12 +44,23 @@
 # 2009
 #
 
-import sys, re
+import sys, re, os.path
 from copy import deepcopy
+from optparse import OptionParser
 
-if len(sys.argv)<2:
-  print "Usage: dbpp.py <source file>"
-  sys.exit(1)
+parser = OptionParser(usage="%prog [-I dir] [-o file | -o-] <input file>",
+                      version="0.1")
+parser.add_option("-I","--include", dest="ipath",
+    type='string', action="append", default=[],
+    help="Prepend directories to search path")
+parser.add_option("-o","--output", dest="output",
+    type='string', action='store', default='-',
+    help="File to which output will be written ('-'=stdout)")
+
+(opts, args) = parser.parse_args()
+
+if len(args)!=1:
+  parser.error('Expected one input file')
 
 comment=re.compile('^\W*#\W*')
 empty=re.compile('^\W*$')
@@ -62,8 +73,14 @@ tokl=re.compile('\W*TOKENS\W*(.*)')
 svar=re.compile('([a-zA-Z][a-zA-Z0-9]*)\W*=\W*\"([^\"]*)')
 rvar=re.compile('\W*UNSET\W*([a-zA-Z][a-zA-Z0-9]*)')
 
+inpfile=args[0]
 # open template table file
-f=open(sys.argv[1],'r')
+f=open(inpfile,'r')
+
+if opts.output=='-':
+  outfile=sys.stdout
+else:
+  outfile=open(opts.output,'w')
 
 tokens=None
 line=0
@@ -80,8 +97,20 @@ def cleansep(inp):
 
 def filerr(mesg):
   print >>sys.stderr, 'On line %(line)d of %(file)s: %(mesg)s'% \
-    {'line':line,'file':sys.argv[1],'mesg':mesg}
+    {'line':line,'file':inpfile,'mesg':mesg}
   sys.exit(1)
+
+def readinfile(name):
+  xf=None
+  for pp in opts.ipath:
+    try:
+      xf=open(os.path.join(pp,infile),'r')
+    except IOError,e:
+      pass
+  if xf is None:
+    filerr("Unable to open "+str(infile))
+
+  return xf.read()
 
 globs={}
 
@@ -95,7 +124,7 @@ try:
       continue
 
     elif comment.match(l):
-      print l,
+      print >>outfile, l,
       continue
 
     # quoted string variable
@@ -117,12 +146,11 @@ try:
     fm=ifile.match(l)
     if fm is not None:
       infile=fm.groups()[0]
-      xf=open(infile,'r')
+
       if infile in inpf:
         filerr('%s is already open'% infile)
 
-      inpf[infile]=xf.read()
-      xf.close()
+      inpf[infile]=readinfile(infile)
       continue
 
     if len(inpf)==0:
@@ -174,7 +202,7 @@ try:
       infile=fn
       while True:
         try:
-          sys.stdout.write(out%macs)
+          outfile.write(out%macs)
           break
         except KeyError,e:
           e=str(e)[1:-1] # strip quotes
