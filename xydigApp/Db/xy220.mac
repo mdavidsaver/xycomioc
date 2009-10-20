@@ -1,7 +1,7 @@
 
 # A Xycom 220 DO board has 32 output pins
 
-FILE "../xybo.db.part"
+FILE "xybo.db.part"
 
 DTYP = "XYCOM 220"
 

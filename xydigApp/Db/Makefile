@@ -26,5 +26,4 @@ include $(TOP)/configure/RULES
 ../O.Common/xy220.db : ../xy220.mac ../xybo.db.part
 
 ../O.Common/%.db: ../%.mac
-	$(TOP)/dbpp.py $< > $@.tmp
-	mv $@.tmp $@
+	$(TOP)/dbpp.py -I.. -o $@ $<

@@ -13,5 +13,4 @@ include $(TOP)/configure/RULES
  ../xy566wave.db.part ../xy566val.db.part
 
 ../O.Common/%.db: ../%.mac
-	$(TOP)/dbpp.py $< > $@.tmp
-	mv $@.tmp $@
+	$(TOP)/dbpp.py -I.. -o $@ $<
