@@ -178,7 +178,7 @@ try:
           break
         except KeyError,e:
           e=str(e)[1:-1] # strip quotes
-          macs[e]='%%(%s)s'%e
+          filerr('Macro %s is undefined'%e)
 
 except Exception,e:
   raise
