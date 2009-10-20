@@ -139,7 +139,6 @@ xycom566setup(
 
   /* Configure card
    * Mode: continuous sequence (default)
-   * enable sequence interrupt only
    * 16 bit conversion (default)
    * sequence controller disable (will be enabled during drvsup init)
    */

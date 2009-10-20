@@ -60,7 +60,7 @@ stc566seqmulti(
 
 seq566set(
       int id,     Arbitrary id for this card
-      int ch,     Channel 0-31 or 0-16 as appropriate
+      int ch,     Channel 0-31 or 0-15 as appropriate
       int nsamp,  Number of samples (>1)
       int ord,    Order to sample in (lowest first) (1-32)
       int prio,   Priority disambiguate channels with the same order

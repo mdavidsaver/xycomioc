@@ -36,9 +36,9 @@ stc566seqmulti(1, 2, 0x100, 0x4800)
 # sample channels 4,5
 # 1 sample each
 seq566set(1, 0, 40, 1, 1, 40)
-seq566set(1, 1, 40, 2, 2, 40)
-seq566set(1, 2, 40, 3, 3, 40)
-seq566set(1, 3, 40, 4, 4)
+seq566set(1, 1, 40, 2, 1, 40)
+seq566set(1, 2, 40, 3, 1, 40)
+seq566set(1, 3, 40, 4, 1)
 seq566set(1, 4, 1, 5, 1)
 seq566set(1, 5, 1, 6, 1)
 
