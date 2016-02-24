@@ -113,13 +113,13 @@ seq566set(int id, int ch, int nsamp, int ord, int prio, int stop)
       card->fail=1;
       return;
     }else if(ent->order == ord && ent->priority == prio){
-      printf("Order %d and prio %d are already used by channel %d\n",
-        ord,prio,ent->channel);
+      printf("Order %d and prio %d are already used by channel %u\n",
+        ord,prio,(unsigned)ent->channel);
       card->fail=1;
       return;
     }else if(ent->order == ord && ent->nsamples != nsamp){
       printf("Order %d must have size %u\n",
-        ord,ent->nsamples);
+        ord,(unsigned)ent->nsamples);
       card->fail=1;
       return;
     }
@@ -180,9 +180,9 @@ int finish566seq(xy566* card)
     ){
       bfirst=node2seqent(nfirst);
       printf("Ch %u (%u) %u:%u S%u\n",
-        bfirst->channel,bfirst->nsamples,
-        bfirst->order,bfirst->priority,
-        bfirst->stop
+        (unsigned)bfirst->channel,(unsigned)bfirst->nsamples,
+        (unsigned)bfirst->order,(unsigned)bfirst->priority,
+        (unsigned)bfirst->stop
       );
     }
     bfirst=NULL;
@@ -224,7 +224,7 @@ int finish566seq(xy566* card)
       }else if(blast->nsamples != csize){
         printf("Card %d channel %d in order %d has as "
             "incorrect number of samples, %d not %d\n",
-            card->id,blast->channel,blast->order,blast->nsamples,csize);
+            card->id,(unsigned)blast->channel,(unsigned)blast->order,(unsigned)blast->nsamples,(unsigned)csize);
         return 1;
       }
     }
@@ -237,7 +237,7 @@ int finish566seq(xy566* card)
       printf("Card %d does not have enough sequence ram to "
         "sample all requested channels\n",card->id);
       printf("cur %u nchan %u csize %u lim %u\n",
-        seqpos,nchan,csize,sizeof(card->seq));
+        (unsigned)seqpos,(unsigned)nchan,(unsigned)csize,(unsigned)sizeof(card->seq));
       return 1;
     }
 
@@ -283,7 +283,7 @@ int finish566seq(xy566* card)
     printf("Sequence for card %d\n",card->id);
     for(i=0;i<sizeof(card->seq);i++){
       if(i%16==0)
-        printf("%02x: ",i);
+        printf("%02x: ",(unsigned)i);
       printf("%02x",card->seq[i]);
       if(i%16==15)
         printf("\n");
