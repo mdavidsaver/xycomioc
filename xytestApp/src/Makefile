@@ -8,8 +8,7 @@ include $(TOP)/configure/CONFIG
 #=============================
 # Build the IOC application
 
-PROD_IOC_vxWorks = xytest
-PROD_IOC_RTEMS   = xytest
+PROD_IOC   = xytest
 
 # xytest.dbd will be created and installed
 DBD += xytest.dbd

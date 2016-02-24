@@ -19,6 +19,10 @@
 
 #include "xy566.h"
 
+#ifndef MIN
+# define MIN(A,B) ((A)<(B) ? (A) : (B))
+#endif
+
 static
 long init_record(waveformRecord* prec)
 {
@@ -77,7 +81,7 @@ long read_chan(waveformRecord* prec)
     return -1;
   }
 
-  prec->nord=min(prec->nelm, card->dlen[chan]);
+  prec->nord=MIN(prec->nelm, card->dlen[chan]);
 
   for(i=0; i<prec->nord; i++)
     fptr[i]=card->data[chan][i];
