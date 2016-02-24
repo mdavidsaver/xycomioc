@@ -1,7 +1,0 @@
-startup = "/xycomioc/iocBoot/ioc566test"
-putenv "ARCH=vxWorks-mpc8540"
-putenv "IOC=ioclocalhost"
-top = "/xycomioc"
-putenv "TOP=/xycomioc"
-topbin = "/xycomioc/bin/vxWorks-mpc8540"
-
